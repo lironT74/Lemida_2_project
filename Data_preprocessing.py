@@ -2,7 +2,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+from datetime import datetime
 
 def show_hist():
     df = pd.read_csv(r'london_merged.csv')
@@ -22,12 +22,16 @@ def show_hist():
 def prepare_dataset():
     df = pd.read_csv(r'london_merged.csv')
     df["cnt_categories"] = df["cnt"].apply(lambda x: 0 if x < 450 else (1 if x < 1400 else 2))
-    df["date"] = df["timestamp"].apply(lambda x: x[:10])
+
     df["hour"] = df["timestamp"].apply(lambda x: int(x[11:13]))
+
+    df["date"] = pd.to_datetime(df["timestamp"]).dt.date
+
+    df["date"] = df["date"].apply(lambda x: int(x.strftime('%d%m%Y')))
 
     return df
 
-def prepare_train_test_validation():
+def prepare_train_test():
 
     df = prepare_dataset()
     dates_in_data = df['date'].unique()
@@ -39,10 +43,15 @@ def prepare_train_test_validation():
     test_set = df[df['date'].isin(test_days)]
     train_set = df[df['date'].isin(train_days)]
 
-    return train_set, test_set
+    test_set_x = test_set.iloc[:,[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
+    test_set_y = test_set.iloc[:,1]
+
+    train_set_x = train_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
+    train_set_y = train_set.iloc[:, 1]
+
+    return test_set_x, test_set_y, train_set_x, train_set_y
+
 
 if __name__ == '__main__':
-    show_hist()
-    df = prepare_dataset()
-    print(df)
-    print(prepare_train_test_validation())
+    # show_hist()
+    print(prepare_train_test()[0].dtypes)
