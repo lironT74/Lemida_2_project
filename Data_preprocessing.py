@@ -1,4 +1,5 @@
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -49,7 +50,14 @@ def prepare_train_test():
     train_set_x = train_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
     train_set_y = train_set.iloc[:, 10]
 
-    return test_set_x, test_set_y, train_set_x, train_set_y
+    scalar = StandardScaler()
+    scalar.fit(train_set_x)
+
+    scaled_train_x = scalar.transform(train_set_x)
+    scaled_test_x = scalar.transform(test_set_x)
+
+
+    return test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y
 
 
 if __name__ == '__main__':
