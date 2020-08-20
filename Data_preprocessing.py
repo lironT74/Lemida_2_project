@@ -56,7 +56,6 @@ def prepare_train_test():
     scaled_train_x = scalar.transform(train_set_x)
     scaled_test_x = scalar.transform(test_set_x)
 
-
     return test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y
 
 
