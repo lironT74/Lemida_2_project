@@ -12,7 +12,7 @@ def logistic_regression():
     scaled_train_x = scaler.transform(train_set_x)
     scaled_test_x = scaler.transform(test_set_x)
 
-    lr = LogisticRegression(max_iter=5000)
+    lr = LogisticRegression(max_iter=5000, multi_class='multinomial')
     lr.fit(scaled_train_x, train_set_y)
 
     predictions = lr.predict(scaled_test_x)

@@ -43,15 +43,14 @@ def prepare_train_test():
     test_set = df[df['date'].isin(test_days)]
     train_set = df[df['date'].isin(train_days)]
 
-    test_set_x = test_set.iloc[:,[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
-    test_set_y = test_set.iloc[:,1]
+    test_set_x = test_set.iloc[:,[2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
+    test_set_y = test_set.iloc[:,10]
 
-    train_set_x = train_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]
-    train_set_y = train_set.iloc[:, 1]
+    train_set_x = train_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
+    train_set_y = train_set.iloc[:, 10]
 
     return test_set_x, test_set_y, train_set_x, train_set_y
 
 
 if __name__ == '__main__':
-    # show_hist()
-    print(prepare_train_test()[0].dtypes)
+    prepare_train_test()
