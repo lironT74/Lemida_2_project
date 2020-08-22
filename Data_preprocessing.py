@@ -60,8 +60,10 @@ def prepare_train_test(scale=True):
         scaled_test_x = scalar.transform(test_set_x)
         return scaled_test_x, test_set_y, scaled_train_x, train_set_y
 
-    return test_set_x, test_set_y, train_set_x, train_set_y
+    return test_set_x, test_set_y, train_set_x, train_set_y, train_days, test_days, df, scalar
 
 
 if __name__ == '__main__':
-    prepare_train_test()
+    # prepare_train_test()
+    _, _, _, _, _, _, train_days, test_days, df = prepare_train_test()
+    # print(train_set_x[train_set_x['date'] == True].index.tolist())
