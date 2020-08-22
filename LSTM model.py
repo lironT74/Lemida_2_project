@@ -103,11 +103,9 @@ if __name__ == '__main__':
         accuracy_list.append(float(acc))
         test_acc = evaluate(X_test, y_test)
         e_interval = i
-        print("Epoch {} Completed,\tLoss {}\tAccuracy: {}\t Test Accuracy: {}".format(epoch + 1,
-                                                                                      np.mean(loss_list[-e_interval:]),
-                                                                                      np.mean(
-                                                                                          accuracy_list[-e_interval:]),
-                                                                                      test_acc))
+        print("Epoch {} Completed,\tLoss {}\tTrain Accuracy: {}\t Test Accuracy: {}"
+              .format(epoch + 1, round(np.mean(loss_list[-e_interval:]), 3),
+                      round(np.mean(accuracy_list[-e_interval:]), 3), test_acc))
 
 
 
