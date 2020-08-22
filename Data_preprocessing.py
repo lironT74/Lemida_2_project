@@ -44,8 +44,8 @@ def prepare_train_test():
     test_set = df[df['date'].isin(test_days)]
     train_set = df[df['date'].isin(train_days)]
 
-    test_set_x = test_set.iloc[:,[2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
-    test_set_y = test_set.iloc[:,10]
+    test_set_x = test_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
+    test_set_y = test_set.iloc[:, 10]
 
     train_set_x = train_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
     train_set_y = train_set.iloc[:, 10]
@@ -56,8 +56,10 @@ def prepare_train_test():
     scaled_train_x = scalar.transform(train_set_x)
     scaled_test_x = scalar.transform(test_set_x)
 
-    return test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y
+    return test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y, train_days, test_days, df, scalar
 
 
 if __name__ == '__main__':
-    prepare_train_test()
+    # prepare_train_test()
+    _, _, _, _, _, _, train_days, test_days, df = prepare_train_test()
+    # print(train_set_x[train_set_x['date'] == True].index.tolist())
