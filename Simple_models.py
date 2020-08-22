@@ -8,6 +8,7 @@ from sklearn.linear_model import Perceptron
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import export_graphviz
 import graphviz
+from graphviz import Source
 
 
 def calc_acc(predictions, real):
@@ -15,24 +16,22 @@ def calc_acc(predictions, real):
 
 
 def one_vs_all(model):
-    test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y = dp.prepare_train_test()
+    test_set_x, test_set_y, train_set_x, train_set_y = dp.prepare_train_test()
 
     ovr = OneVsRestClassifier(model)
-    ovr.fit(scaled_train_x, train_set_y)
+    ovr.fit(train_set_x, train_set_y)
 
-    predictions = ovr.predict(scaled_test_x)
+    predictions = ovr.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
 
     print(acc)
 
 
-def desicion_tree():
-    test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y = dp.prepare_train_test()
+def decision_tree():
+    test_set_x, test_set_y, train_set_x, train_set_y = dp.prepare_train_test()
 
     dt = DecisionTreeClassifier()
-    dt.fit(scaled_train_x, train_set_y)
-
-    from graphviz import Source
+    dt.fit(train_set_x, train_set_y)
 
     export_graphviz(dt, out_file="./tree.dot",
                     feature_names=train_set_x.columns,
@@ -48,48 +47,48 @@ def desicion_tree():
 
     graph.write_png('./tree.png')
 
-    predictions = dt.predict(scaled_test_x)
+    predictions = dt.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
 
     print(acc)
 
 
 def logistic_regression():
-    test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y = dp.prepare_train_test()
+    test_set_x, test_set_y, train_set_x, train_set_y = dp.prepare_train_test()
 
-    lr = LogisticRegression()
-    lr.fit(scaled_train_x, train_set_y)
+    lr = LogisticRegression(solver='lbfgs', multi_class='auto')
+    lr.fit(train_set_x, train_set_y)
 
-    predictions = lr.predict(scaled_test_x)
+    predictions = lr.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
 
     print(acc)
 
 
-def Naive_bayes():
-    test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y = dp.prepare_train_test()
+def naive_bayes():
+    test_set_x, test_set_y, train_set_x, train_set_y = dp.prepare_train_test()
 
     nb = GaussianNB()
-    nb.fit(scaled_train_x, train_set_y)
+    nb.fit(train_set_x, train_set_y)
 
-    predictions = nb.predict(scaled_test_x)
+    predictions = nb.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
 
     print(acc)
 
 
 if __name__ == '__main__':
-    # logistic_regression()
-    # Naive_bayes()
-    desicion_tree()
+    logistic_regression()
+    naive_bayes()
+    decision_tree()
 
-    # one_vs_all(Perceptron(max_iter=5000))
-    # one_vs_all(LogisticRegression(max_iter=5000))
-    # one_vs_all(LinearSVC(max_iter=5000))
-    #
-    # one_vs_all(DecisionTreeClassifier())
-    #
-    # one_vs_all(SVC(max_iter=500000, kernel="linear"))
-    # one_vs_all(SVC(max_iter=500000, kernel="rbf"))
-    # one_vs_all(SVC(max_iter=500000, kernel="poly"))
-    # one_vs_all(SVC(max_iter=500000, kernel="sigmoid"))
+    one_vs_all(Perceptron(max_iter=5000))
+    one_vs_all(LogisticRegression(max_iter=5000, solver='lbfgs'))
+    one_vs_all(LinearSVC(max_iter=5000))
+
+    one_vs_all(DecisionTreeClassifier())
+
+    one_vs_all(SVC(max_iter=500000, kernel="linear"))
+    one_vs_all(SVC(max_iter=500000, kernel="rbf"))
+    one_vs_all(SVC(max_iter=500000, kernel="poly"))
+    one_vs_all(SVC(max_iter=500000, kernel="sigmoid"))

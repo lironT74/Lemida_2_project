@@ -2,10 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import Data_preprocessing
 import numpy as np
 
-from auxillary_functions import get_x_any_y
+from Data_preprocessing import prepare_grouped_data
 
 
 class LSTMTagger(nn.Module):
@@ -29,9 +28,7 @@ def evaluate(X_test, y_test):
     acc = 0
     with torch.no_grad():
         for day_index in np.random.permutation(len(X_test)):
-            hours_array = scalar.transform(X_test[day_index])
-            # hours_array = X_test[day_index]
-
+            hours_array = X_test[day_index]
             counts_tensor = torch.from_numpy(y_test[day_index]).to(device)
             counts_scores = model(hours_array)
             _, indices = torch.max(counts_scores, 1)
@@ -42,9 +39,7 @@ def evaluate(X_test, y_test):
 
 if __name__ == '__main__':
     print('hey5')
-    _, _, _, _, train_days, test_days, df, scalar = Data_preprocessing.prepare_train_test()
-    X_train, y_train = get_x_any_y(df, train_days)
-    X_test, y_test = get_x_any_y(df, test_days)
+    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -79,9 +74,9 @@ if __name__ == '__main__':
         i = 0
         for day_index in np.random.permutation(len(X_train)):
             i += 1
-            # hours_array = X_train[day_index]
 
-            hours_array = scalar.transform(X_train[day_index])
+            # hours_array = scalar.transform(X_train[day_index])
+            hours_array = X_train[day_index]
             counts_tensor = torch.from_numpy(y_train[day_index]).to(device)
 
             counts_scores = model(hours_array)
@@ -103,9 +98,11 @@ if __name__ == '__main__':
         accuracy_list.append(float(acc))
         test_acc = evaluate(X_test, y_test)
         e_interval = i
-        print("Epoch {} Completed,\tLoss {}\tTrain Accuracy: {}\t Test Accuracy: {}"
-              .format(epoch + 1, round(np.mean(loss_list[-e_interval:]), 3),
-                      round(np.mean(accuracy_list[-e_interval:]), 3), test_acc))
+        print("Epoch {} Completed\t Loss {}\t Train Accuracy: {}\t Test Accuracy: {}"
+              .format(epoch + 1,
+                      round(np.mean(loss_list[-e_interval:]), 3),
+                      round(np.mean(accuracy_list[-e_interval:]), 3),
+                      test_acc))
 
 
 

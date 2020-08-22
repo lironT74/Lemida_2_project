@@ -9,7 +9,7 @@ from auxillary_functions import get_x_any_y
 
 def show_hist():
     df = pd.read_csv(r'london_merged.csv')
-    df["cnt"].hist(figsize=(5,5), grid=False, bins=100)
+    df["cnt"].hist(figsize=(5, 5), grid=False, bins=100)
     buckets = 3
     colors = ["red", "orange", "green"]
     for i in range(1, buckets+1):
@@ -26,11 +26,8 @@ def show_hist():
 def prepare_dataset():
     df = pd.read_csv(r'london_merged.csv')
     df["cnt_categories"] = df["cnt"].apply(lambda x: 0 if x < 450 else (1 if x < 1400 else 2))
-
     df["hour"] = df["timestamp"].apply(lambda x: int(x[11:13]))
-
     df["date"] = pd.to_datetime(df["timestamp"]).dt.date
-
     df["date"] = df["date"].apply(lambda x: int(x.strftime('%d%m%Y')))
 
     return df
@@ -59,9 +56,9 @@ def prepare_train_test(scale=True):
 
         scaled_train_x = scalar.transform(train_set_x)
         scaled_test_x = scalar.transform(test_set_x)
-        return scaled_test_x, test_set_y, scaled_train_x, train_set_y, train_days, test_days, df, scalar
+        return scaled_test_x, test_set_y, scaled_train_x, train_set_y
 
-    return test_set_x, test_set_y, train_set_x, train_set_y, train_days, test_days, df, None
+    return test_set_x, test_set_y, train_set_x, train_set_y
 
 
 def prepare_grouped_data(scale=True):
@@ -91,4 +88,7 @@ if __name__ == '__main__':
     # prepare_train_test()
     # _, _, _, _, _, _, train_days, test_days, df = prepare_train_test()
     # print(train_set_x[train_set_x['date'] == True].index.tolist())
-    prepare_grouped_data()
+    # prepare_grouped_data()
+    data = prepare_dataset()
+    print(data.head())
+    pass
