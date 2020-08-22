@@ -5,14 +5,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+
 def show_hist():
     df = pd.read_csv(r'london_merged.csv')
-    hist = df["cnt"].hist(figsize=(5,5), grid=False, bins=100)
+    df["cnt"].hist(figsize=(5,5), grid=False, bins=100)
     buckets = 3
     colors = ["red", "orange", "green"]
     for i in range(1, buckets+1):
         print(df["cnt"].quantile(q=i*1/buckets))
-        plt.vlines(x=df["cnt"].quantile(q=i/buckets), ymin=0, ymax=1750, colors=colors[i-1], label=f"{np.round(i/buckets, 2)} quantile")
+        plt.vlines(x=df["cnt"].quantile(q=i/buckets), ymin=0, ymax=1750, colors=colors[i-1],
+                   label=f"{np.round(i/buckets, 2)} quantile")
 
     plt.title("histogram of bicycles count")
     plt.legend()
@@ -32,8 +34,8 @@ def prepare_dataset():
 
     return df
 
-def prepare_train_test():
 
+def prepare_train_test(scale=True):
     df = prepare_dataset()
     dates_in_data = df['date'].unique()
     test_size = 0.25
@@ -44,19 +46,21 @@ def prepare_train_test():
     test_set = df[df['date'].isin(test_days)]
     train_set = df[df['date'].isin(train_days)]
 
-    test_set_x = test_set.iloc[:,[2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
-    test_set_y = test_set.iloc[:,10]
+    test_set_x = test_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
+    test_set_y = test_set.iloc[:, 10]
 
     train_set_x = train_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
     train_set_y = train_set.iloc[:, 10]
 
-    scalar = StandardScaler()
-    scalar.fit(train_set_x)
+    if scale:
+        scalar = StandardScaler()
+        scalar.fit(train_set_x)
 
-    scaled_train_x = scalar.transform(train_set_x)
-    scaled_test_x = scalar.transform(test_set_x)
+        scaled_train_x = scalar.transform(train_set_x)
+        scaled_test_x = scalar.transform(test_set_x)
+        return scaled_test_x, test_set_y, scaled_train_x, train_set_y
 
-    return test_set_x, scaled_test_x, test_set_y, train_set_x, scaled_train_x, train_set_y
+    return test_set_x, test_set_y, train_set_x, train_set_y
 
 
 if __name__ == '__main__':
