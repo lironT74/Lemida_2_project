@@ -6,16 +6,17 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import LinearSVC, SVC
 from sklearn.linear_model import Perceptron
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.tree import export_graphviz
-import graphviz
-from graphviz import Source
+# from sklearn.tree import export_graphviz
+# import graphviz
+# from graphviz import Source
+# import pydot
 
 
 def calc_acc(predictions, real):
-    return np.average([pred == real for pred, real in zip(predictions, real)])
+    return np.average(predictions == real)
 
 
-def one_vs_all(model):
+def one_vs_all(model, name='model'):
     test_set_x, test_set_y, train_set_x, train_set_y = dp.prepare_train_test()
 
     ovr = OneVsRestClassifier(model)
@@ -24,7 +25,7 @@ def one_vs_all(model):
     predictions = ovr.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
 
-    print(acc)
+    print(f'{f"One vs All {name} accuracy:":50} {round(acc, 3)}')
 
 
 def decision_tree():
@@ -41,16 +42,13 @@ def decision_tree():
 
     Source.from_file("tree.dot")
 
-    import pydot
-
     (graph,) = pydot.graph_from_dot_file('./tree.dot')
 
     graph.write_png('./tree.png')
 
     predictions = dt.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
-
-    print(acc)
+    print(f'{"Decision Tree accuracy:":50} {round(acc, 3)}')
 
 
 def logistic_regression():
@@ -61,8 +59,7 @@ def logistic_regression():
 
     predictions = lr.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
-
-    print(acc)
+    print(f'{"Logistic Regression accuracy:":50} {round(acc, 3)}')
 
 
 def naive_bayes():
@@ -73,8 +70,7 @@ def naive_bayes():
 
     predictions = nb.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
-
-    print(acc)
+    print(f'{"Naive Bayes accuracy:":50} {round(acc, 3)}')
 
 
 if __name__ == '__main__':
@@ -82,13 +78,13 @@ if __name__ == '__main__':
     naive_bayes()
     decision_tree()
 
-    one_vs_all(Perceptron(max_iter=5000))
-    one_vs_all(LogisticRegression(max_iter=5000, solver='lbfgs'))
-    one_vs_all(LinearSVC(max_iter=5000))
+    one_vs_all(Perceptron(max_iter=5000), 'perceptron')
+    one_vs_all(LogisticRegression(max_iter=5000, solver='lbfgs'), 'logistic regression')
+    one_vs_all(LinearSVC(max_iter=5000), 'svm')
 
-    one_vs_all(DecisionTreeClassifier())
+    one_vs_all(DecisionTreeClassifier(), 'decision tree')
 
-    one_vs_all(SVC(max_iter=500000, kernel="linear"))
-    one_vs_all(SVC(max_iter=500000, kernel="rbf"))
-    one_vs_all(SVC(max_iter=500000, kernel="poly"))
-    one_vs_all(SVC(max_iter=500000, kernel="sigmoid"))
+    one_vs_all(SVC(max_iter=500000, kernel="linear"), 'linear svm')
+    one_vs_all(SVC(max_iter=500000, kernel="rbf"), 'rbf svm')
+    one_vs_all(SVC(max_iter=500000, kernel="poly"), 'poly svm')
+    one_vs_all(SVC(max_iter=500000, kernel="sigmoid"), 'sigmoid svm')

@@ -3,8 +3,10 @@ from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime
-from auxillary_functions import get_x_any_y
+from auxiliary_functions import get_x_any_y
+
+x_columns = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'date']
+y_column = 'cnt_categories'
 
 
 def show_hist():
@@ -44,21 +46,21 @@ def prepare_train_test(scale=True):
     test_set = df[df['date'].isin(test_days)]
     train_set = df[df['date'].isin(train_days)]
 
-    test_set_x = test_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
-    test_set_y = test_set.iloc[:, 10]
+    test_x = test_set[x_columns]
+    test_y = test_set[y_column]
 
-    train_set_x = train_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
-    train_set_y = train_set.iloc[:, 10]
+    train_x = train_set[x_columns]
+    train_y = train_set[y_column]
 
     if scale:
         scalar = StandardScaler()
-        scalar.fit(train_set_x)
+        scalar.fit(train_x)
 
-        scaled_train_x = scalar.transform(train_set_x)
-        scaled_test_x = scalar.transform(test_set_x)
-        return scaled_test_x, test_set_y, scaled_train_x, train_set_y
+        scaled_train_x = scalar.transform(train_x)
+        scaled_test_x = scalar.transform(test_x)
+        return scaled_test_x, test_y, scaled_train_x, train_y
 
-    return test_set_x, test_set_y, train_set_x, train_set_y
+    return test_x, test_y, train_x, train_y
 
 
 def prepare_grouped_data(scale=True):
@@ -68,8 +70,8 @@ def prepare_grouped_data(scale=True):
     train_days, test_days = train_test_split(dates_in_data,
                                              test_size=test_size,
                                              random_state=57)
-    X_train, y_train = get_x_any_y(df, train_days)
-    X_test, y_test = get_x_any_y(df, test_days)
+    train_x, train_y = get_x_any_y(df, train_days, x_columns, y_column)
+    test_x, test_y = get_x_any_y(df, test_days, x_columns, y_column)
 
     if scale:
         train_set = df[df['date'].isin(train_days)]
@@ -77,16 +79,16 @@ def prepare_grouped_data(scale=True):
         scalar = StandardScaler()
         scalar.fit(train_set_x)
 
-        scaled_X_train = [scalar.transform(day) for day in X_train]
-        scaled_X_test = [scalar.transform(day) for day in X_test]
-        return scaled_X_train, y_train, scaled_X_test, y_test
+        scaled_train_x = [scalar.transform(day) for day in train_x]
+        scaled_test_x = [scalar.transform(day) for day in test_x]
+        return scaled_train_x, train_y, scaled_test_x, test_y
 
-    return X_train, y_train, X_test, y_test
+    return train_x, train_y, test_x, test_y
 
 
 if __name__ == '__main__':
     prepare_train_test()
-    prepare_grouped_data()
+    # prepare_grouped_data()
     # _, _, _, _, _, _, train_days, test_days, df = prepare_train_test()
     # print(train_set_x[train_set_x['date'] == True].index.tolist())
     # prepare_grouped_data()

@@ -11,7 +11,8 @@ class LSTMTagger(nn.Module):
     def __init__(self, vector_emb_dim, hidden_dim, count_types_size):
         super(LSTMTagger, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.lstm = nn.LSTM(input_size=vector_emb_dim, hidden_size=hidden_dim, num_layers=2, bidirectional=True, batch_first=False)
+        self.lstm = nn.LSTM(input_size=vector_emb_dim, hidden_size=hidden_dim,
+                            num_layers=2, bidirectional=True, batch_first=False)
         self.hidden_to_count = nn.Linear(hidden_dim * 2, count_types_size)
         # self.tanh = nn.Tanh()
 
