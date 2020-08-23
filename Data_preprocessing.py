@@ -13,7 +13,7 @@ def show_hist():
     buckets = 3
     colors = ["red", "orange", "green"]
     for i in range(1, buckets+1):
-        print(df["cnt"].quantile(q=i*1/buckets))
+        print(df["cnt"].quantile(q=i/buckets))
         plt.vlines(x=df["cnt"].quantile(q=i/buckets), ymin=0, ymax=1750, colors=colors[i-1],
                    label=f"{np.round(i/buckets, 2)} quantile")
 
@@ -85,10 +85,14 @@ def prepare_grouped_data(scale=True):
 
 
 if __name__ == '__main__':
-    # prepare_train_test()
+    prepare_train_test()
+    prepare_grouped_data()
     # _, _, _, _, _, _, train_days, test_days, df = prepare_train_test()
     # print(train_set_x[train_set_x['date'] == True].index.tolist())
     # prepare_grouped_data()
-    data = prepare_dataset()
-    print(data.head())
-    pass
+    # data = prepare_dataset()
+    # for column in data:
+    #     if column == 'timestamp':
+    #         continue
+    #     print(f'{column}: {len(data[column].unique())}')
+    # pass
