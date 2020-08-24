@@ -5,8 +5,7 @@ from time import strftime, time
 from scipy.optimize import fmin_l_bfgs_b
 from MEMM.inference import memm_viterbi
 from MEMM.preprocessing import FeatureStatisticsClass, Feature2Id
-from auxiliary_functions import get_all_histories_and_corresponding_tags, get_file_tags, \
-    get_predictions_list, clean_tags
+from auxiliary_functions import get_histories_and_corresponding_tags, get_file_tags, get_predictions_list
 from MEMM.optimization import calc_empirical_counts, calc_objective, calc_gradient
 from numpy.linalg import norm
 from os import path, makedirs
@@ -62,7 +61,6 @@ class Log_Linear_MEMM:
         self.feature2id = Feature2Id(self.feature_statistics, self.threshold)
         self.feature2id.initialize_index_dicts(x, y, self.f100, self.f103, self.f104, self.f105, self.f106, self.f107)
         self.dim = self.feature2id.num_features
-        pass
 
     def __optimize(self, x, y, iprint=20):
         """
@@ -72,7 +70,7 @@ class Log_Linear_MEMM:
         """
         # initializing parameters for fmin_l_bfgs_b
         all_tags_list = self.feature2id.get_all_tags()
-        all_histories, all_corresponding_tags = get_all_histories_and_corresponding_tags(x, y)
+        all_histories, all_corresponding_tags = get_histories_and_corresponding_tags(x, y)
         features_list = self.feature2id.build_features_list(all_histories, all_corresponding_tags)
         features_matrix = self.feature2id.build_features_matrix(all_histories, all_tags_list)
         empirical_counts = calc_empirical_counts(features_list, self.dim)
@@ -95,26 +93,15 @@ class Log_Linear_MEMM:
         with open(pkl_path, 'wb') as f:
             pickle.dump(self, f)
 
-    def predict(self, data, beam_size=2):
+    def predict(self, x, beam_size=2):
         """
         Generates a prediction for a given input. Input can be either a sentence (string) or a file path.
         File can be in either .wtag or .words format.
         :param beam_size: a parameter of the viterbi
-        :param input_data: string or file path
         :return: A "predictions" matrix with a tuple (word, pred) in the [i][j] cell, where i is the number of the line
         in the file and j is the number of the word in the line.
         """
-        if len(input_data) > 6 and input_data[-6:] == '.words':
-            return self.__predict_file(input_data, beam_size)
-
-        if len(input_data) > 5 and input_data[-5:] == '.wtag':
-            temp_file = r'data\temp' + str(round(time())) + '.words'  # using time() to allow parallel runs
-            clean_tags(input_data, temp_file)
-            predictions = self.__predict_file(temp_file, beam_size)
-            remove(temp_file)
-            return predictions
-
-        return memm_viterbi(self.feature2id, self.weights, input_data, beam_size)
+        return [np.array(memm_viterbi(self.feature2id, self.weights, day, beam_size)) for day in x]
 
 
     @staticmethod

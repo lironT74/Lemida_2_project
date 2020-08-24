@@ -144,35 +144,26 @@ def sparse_to_dense(sparse_vec, dim):
     return dense_vec
 
 
-def get_all_histories_and_corresponding_tags(data):
+def get_histories_and_corresponding_tags(x, y):
     """
-    :param file_path: A .wtag file
     :return: Two lists, one of all histories, and the other of all tags in the file
     """
-    with open(file_path) as f:
-        all_histories = []
-        all_ctags = []
-        for line in f:
-            words_tags_arr = get_words_arr(line)
-            if len(words_tags_arr) == 0:
-                continue
-            words_tags_split = [word_tag.split('_') for word_tag in words_tags_arr]
-            ptag, ctag = BEGIN, BEGIN
-            cword, nword = BEGIN, words_tags_split[0][0]
-            for i in range(len(words_tags_split)):
-                pptag = ptag
-                ptag = ctag
-                ctag = words_tags_split[i][1]
-                pword = cword
-                cword = words_tags_split[i][0]
-                if i + 1 == len(words_tags_split):
-                    nword = STOP
-                else:
-                    nword = words_tags_split[i + 1][0]
-                history = (cword, pptag, ptag, pword, nword)
-                all_histories.append(history)
-                all_ctags.append(ctag)
-    return all_histories, all_ctags
+
+    histories = []
+    tags = []
+    for day, day_tags in zip(x, y):
+        for i in range(len(day)):
+            phour = day[i-1] if i > 0 else ([BEGIN] * len(day[0]))
+            chour = day[i]
+            nhour = day[i+1] if i < len(day) - 1 else ([STOP] * len(day[0]))
+            pptag = day_tags[i-2] if i > 1 else BEGIN
+            ptag = day_tags[i-1] if i > 0 else BEGIN
+            ctag = day_tags[i]
+
+            history = (chour, pptag, ptag, phour, nhour)
+            histories.append(history)
+            tags.append(ctag)
+    return histories, tags
 
 
 def get_predictions_list(predictions):
@@ -185,25 +176,6 @@ def get_predictions_list(predictions):
         for word_tag_tuple in sentence:
             predicted_tags.append(word_tag_tuple[1])
     return predicted_tags
-
-
-def clean_tags(input_data, file_name=None):
-    """
-    Creates a clean version of input data, without the tags
-    :param input_data: A file of format .wtag
-    :param file_name: The name of the clean file
-    """
-    if file_name is None:
-        file_name = input_data[:-5] + '_clean.words'
-
-    with open(input_data, 'r') as in_file:
-        with open(file_name, 'w') as out_file:
-            for line in in_file:
-                words_tags = line.split()
-                for word_tag in words_tags:
-                    word = word_tag.split('_')[0]
-                    out_file.write(word + ' ')
-                out_file.write('\n')
 
 
 def update_dict(index_dict, key, value, count_dict, threshold=0):

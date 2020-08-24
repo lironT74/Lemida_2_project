@@ -26,24 +26,26 @@ def calc_q_denominator(feature_ids, weights, all_tags, history):
     """
     denominator = 0
     for tag in all_tags:
-        denominator += exp(weights @ feature_ids.dense_feature_representation(history, tag))
+        vector = feature_ids.dense_feature_representation(history, tag)
+        denominator += exp(weights @ vector)
 
     return denominator
 
 
-def memm_viterbi(feature_ids, weights, sentence, beam_size):
+def memm_viterbi(feature_ids, weights, day, beam_size):
     """
     Viterbi prediction function based on lectures
     :param feature_ids:
     :param weights:
-    :param sentence:
     :param beam_size:
     :return:
     """
     all_tags = feature_ids.get_all_tags()
-    words_arr = [BEGIN] + get_words_arr(sentence) + [STOP]
+    BEGIN_day = [BEGIN] * len(day[0])
+    STOP_day = [STOP] * len(day[0])
+    days_array = [BEGIN_day] + list(day) + [STOP_day]
     # We offset the size of the list to match the mathematical algorithm
-    n = len(words_arr) - 2
+    n = len(day)
 
     pi = [{} for i in range(n + 1)]
     bp = [{} for i in range(n + 1)]
@@ -53,19 +55,19 @@ def memm_viterbi(feature_ids, weights, sentence, beam_size):
     if beam_size == 0:
         tags_dict.update(dict.fromkeys([i for i in range(1, n+1)], all_tags))
 
-    cword, nword = words_arr[0], words_arr[1]
+    chour, nword = days_array[0], days_array[1]
 
     for k in range(1, n + 1):
-        pword = cword
-        cword = nword
-        nword = words_arr[k + 1]
+        phour = chour
+        chour = nword
+        nword = days_array[k + 1]
 
         pi[k] = dict.fromkeys([(u, v) for u in tags_dict[k-1] for v in all_tags], 0)
         for u in tags_dict[k-1]:
             for t in tags_dict[k-2]:
                 if pi[k-1][t, u] == 0:
                     continue
-                history = (cword, t, u, pword, nword)
+                history = (chour, t, u, phour, nword)
                 q_denominator = calc_q_denominator(feature_ids, weights, all_tags, history)
                 for v in all_tags:
                     q = calc_q(feature_ids, weights, history, v, q_denominator)
@@ -84,7 +86,7 @@ def memm_viterbi(feature_ids, weights, sentence, beam_size):
         beam_list.sort(reverse=True, key=lambda item: item[1])
         tags_dict[k] = [beam_list[i][0] for i in range(beam_size)]
 
-    tag_sequence = [None for i in range(n + 1)]
+    tag_sequence = [None] * (n+1)
     max_prob = 0
     for u, v in pi[n].keys():
         if pi[n][(u, v)] > max_prob:
