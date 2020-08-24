@@ -6,11 +6,11 @@ import seaborn as sns
 from os import remove
 from time import strftime, time
 from scipy.optimize import fmin_l_bfgs_b
-from inference import memm_viterbi
-from preprocessing import FeatureStatisticsClass, Feature2Id
+from MEMM.inference import memm_viterbi
+from MEMM.preprocessing import FeatureStatisticsClass, Feature2Id
 from auxiliary_functions import get_all_histories_and_corresponding_tags, get_file_tags, \
     get_predictions_list, clean_tags
-from optimization import calc_empirical_counts, calc_objective, calc_gradient
+from MEMM.optimization import calc_empirical_counts, calc_objective, calc_gradient
 from numpy.linalg import norm
 
 
@@ -54,17 +54,17 @@ class Log_Linear_MEMM:
         """
         return self.weights @ other.weights / (norm(self.weights) * norm(other.weights))
 
-    def fit(self, train_path, iprint=20):
+    def fit(self, train_path, i_print=20):
         """
         A simple interface to train a model.
         :param train_path: A path for training data, *.wtag format.
-        :param iprint: A parameter of fmin_l_bfgs_b, effects how often it prints
+        :param i_print: A parameter of fmin_l_bfgs_b, effects how often it prints
         :return self
         """
         start_time = time()
         self.train_path = train_path
         self.__preprocess()
-        self.__optimize(iprint)
+        self.__optimize(i_print)
         self.fit_time = time() - start_time
         return self
 
@@ -252,7 +252,7 @@ class Log_Linear_MEMM:
         if show:
             fig = plt.gcf()
             fig.set_size_inches(8, 12)
-            ax = sns.heatmap(cm, annot=True, cmap='Blues')
+            sns.heatmap(cm, annot=True, cmap='Blues')
             plt.show()
         return cm
 

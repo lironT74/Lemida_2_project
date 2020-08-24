@@ -7,9 +7,9 @@ import numpy as np
 from Data_preprocessing import prepare_grouped_data
 
 
-class LSTMTagger(nn.Module):
+class LSTM_Tagger(nn.Module):
     def __init__(self, vector_emb_dim, hidden_dim, count_types_size):
-        super(LSTMTagger, self).__init__()
+        super(LSTM_Tagger, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.lstm = nn.LSTM(input_size=vector_emb_dim, hidden_size=hidden_dim,
                             num_layers=2, bidirectional=True, batch_first=False)
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     HIDDEN_DIM = 50
     COUNT_TYPE_SIZE = 3
 
-    model = LSTMTagger(VECTOR_EMBEDDING_DIM, HIDDEN_DIM, COUNT_TYPE_SIZE)
+    model = LSTM_Tagger(VECTOR_EMBEDDING_DIM, HIDDEN_DIM, COUNT_TYPE_SIZE)
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")
@@ -104,9 +104,3 @@ if __name__ == '__main__':
                       round(np.mean(loss_list[-e_interval:]), 3),
                       round(np.mean(accuracy_list[-e_interval:]), 3),
                       test_acc))
-
-
-
-
-
-

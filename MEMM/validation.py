@@ -1,5 +1,6 @@
-from log_linear_memm import Log_Linear_MEMM
+from MEMM.log_linear_memm import Log_Linear_MEMM
 import pickle
+
 
 def validate(train_path, report_path, start_index, thresholds, fix_thresholds, lambdas, maxiter, fix_weights_list,
              small_model):
@@ -27,7 +28,7 @@ def validate(train_path, report_path, start_index, thresholds, fix_thresholds, l
 def evaluate(train_path, model_index, threshold, fix_threshold, lam, maxiter, fix_weights, small_model):
     # creating and training a model
     model = Log_Linear_MEMM(threshold, fix_threshold, lam, maxiter, fix_weights)
-    model.fit(train_path, iprint=-1)
+    model.fit(train_path, i_print=-1)
     iterations = model.iter
 
     # saving trained model

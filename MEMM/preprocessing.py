@@ -2,7 +2,6 @@ from collections import OrderedDict
 from auxiliary_functions import get_words_arr, parse_lower, add_or_append, BEGIN, STOP, has_digit, CONTAINS_DIGIT, \
     has_hyphen, CONTAINS_HYPHEN, has_upper, CONTAINS_UPPER
 import numpy as np
-import scipy.sparse as sp
 
 
 class FeatureStatisticsClass:

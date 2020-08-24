@@ -1,7 +1,5 @@
-import numpy as np
-
 from math import exp
-from auxiliary_functions import BEGIN, STOP, get_words_arr, exp_multiply_sparse
+from auxiliary_functions import BEGIN, STOP, get_words_arr
 
 
 def calc_q(feature_ids, weights, history, ctag, denominator):
