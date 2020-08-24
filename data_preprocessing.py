@@ -75,7 +75,7 @@ def prepare_grouped_data(scale=True):
 
     if scale:
         train_set = df[df['date'].isin(train_days)]
-        train_set_x = train_set.iloc[:, [2, 3, 4, 5, 6, 7, 8, 9, 11, 12]]
+        train_set_x = train_set[x_columns]
         scalar = StandardScaler()
         scalar.fit(train_set_x)
 
@@ -87,14 +87,7 @@ def prepare_grouped_data(scale=True):
 
 
 if __name__ == '__main__':
-    prepare_train_test()
-    # prepare_grouped_data()
-    # _, _, _, _, _, _, train_days, test_days, df = prepare_train_test()
-    # print(train_set_x[train_set_x['date'] == True].index.tolist())
-    # prepare_grouped_data()
-    # data = prepare_dataset()
-    # for column in data:
-    #     if column == 'timestamp':
-    #         continue
-    #     print(f'{column}: {len(data[column].unique())}')
-    # pass
+    test_x, _, train_x, _ = prepare_train_test(True)
+    for col in train_x:
+        print(col, len(train_x[col].unique()) - len(test_x[col].unique()))
+    pass

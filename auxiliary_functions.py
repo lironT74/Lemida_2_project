@@ -144,7 +144,7 @@ def sparse_to_dense(sparse_vec, dim):
     return dense_vec
 
 
-def get_all_histories_and_corresponding_tags(file_path):
+def get_all_histories_and_corresponding_tags(data):
     """
     :param file_path: A .wtag file
     :return: Two lists, one of all histories, and the other of all tags in the file
@@ -204,3 +204,10 @@ def clean_tags(input_data, file_name=None):
                     word = word_tag.split('_')[0]
                     out_file.write(word + ' ')
                 out_file.write('\n')
+
+
+def update_dict(index_dict, key, value, count_dict, threshold=0):
+    if key not in index_dict and count_dict[key] >= threshold:
+        index_dict[key] = value
+        return 1
+    return 0

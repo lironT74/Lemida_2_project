@@ -1,4 +1,4 @@
-import Data_preprocessing as dp
+import data_preprocessing as dp
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 from sklearn.multiclass import OneVsRestClassifier
