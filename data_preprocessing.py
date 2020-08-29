@@ -17,7 +17,7 @@ def show_hist():
     for i in range(1, buckets+1):
         print(df["cnt"].quantile(q=i/buckets))
         plt.vlines(x=df["cnt"].quantile(q=i/buckets), ymin=0, ymax=1750, colors=colors[i-1],
-                   label=f"{np.round(i/buckets, 2)} quantile")
+                   label=f"{int(df['cnt'].quantile(q=i/buckets))} - {np.round(i/buckets, 2)} quantile")
 
     plt.title("histogram of bicycles count")
     plt.legend()
@@ -87,7 +87,13 @@ def prepare_grouped_data(scale=True):
 
 
 if __name__ == '__main__':
-    test_x, _, train_x, _ = prepare_train_test(True)
-    for col in train_x:
-        print(col, len(train_x[col].unique()) - len(test_x[col].unique()))
-    pass
+    # test_x, _, train_x, _ = prepare_train_test(True)
+    # for col in train_x:
+    #     print(col, len(train_x[col].unique()) - len(test_x[col].unique()))
+    # pass
+
+    show_hist()
+
+    df = pd.read_csv(r'london_merged.csv')
+
+    # print(max(df["cnt"]))
