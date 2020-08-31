@@ -3,29 +3,39 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
-
 from data_preprocessing import prepare_grouped_data
 
 
-class LSTM_Tagger(nn.Module):
-    def __init__(self, vector_emb_dim, hidden_dim, num_classes):
-        super(LSTM_Tagger, self).__init__()
+class Hybrid_Tagger(nn.Module):
+    def __init__(self, vector_emb_dim, hidden_dim, num_classes, hidden_v_dim=50):
+        super(Hybrid_Tagger, self).__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.lstm = nn.LSTM(input_size=vector_emb_dim, hidden_size=hidden_dim,
                             num_layers=2, bidirectional=True, batch_first=False)
-        self.hidden_to_count = nn.Linear(hidden_dim * 2, num_classes)
 
-    def forward(self, hours_array, get_hidden_layer=False):
+        self.low_linear = nn.Linear(hidden_dim*2, hidden_v_dim)
+        self.medium_linear = nn.Linear(hidden_dim*2, hidden_v_dim)
+        self.high_linear = nn.Linear(hidden_dim*2, hidden_v_dim)
+
+        self.v = nn.Linear(hidden_v_dim, 1)
+
+    def forward(self, hours_array):
         hours_tensor = torch.from_numpy(hours_array).float().to(self.device)
-        lstm_out, _ = self.lstm(hours_tensor.view(hours_tensor.shape[0], 1, -1))  # [seq_length, batch_size, 2*hidden_dim]
+        seq_length = hours_tensor.shape[0]
+        lstm_out, _ = self.lstm(hours_tensor.view(hours_tensor.shape[0], 1, -1))    # [seq_length, batch_size, 2*hidden_dim]
 
-        if get_hidden_layer:
-            return lstm_out
+        low = self.low_linear(lstm_out)                                             # [seq_length, batch_size, hidden_v_dim]
+        medium = self.medium_linear(lstm_out)                                       # [seq_length, batch_size, hidden_v_dim]
+        high = self.high_linear(lstm_out)                                           # [seq_length, batch_size, hidden_v_dim]
 
-        class_weights = self.hidden_to_count(lstm_out.view(hours_tensor.shape[0], -1))  # [seq_length, tag_dim]
-        # return class_weights
+        v_low = self.v(low)                                                         # [seq_length, batch_size, 1]
+        v_medium = self.v(medium)                                                   # [seq_length, batch_size, 1]
+        v_high = self.v(high)                                                       # [seq_length, batch_size, 1]
 
-        count_type_scores = F.log_softmax(class_weights, dim=1)  # [seq_length, tag_dim]
+        v = torch.cat([v_low, v_medium, v_high], dim=2)
+
+        count_type_scores = F.log_softmax(v.view(seq_length, -1), dim=1)  # [seq_length, tag_dim]
+
         return count_type_scores
 
 
@@ -44,12 +54,10 @@ def evaluate(X_test, y_test):
 
 
 if __name__ == '__main__':
-    print('hey5')
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print(X_train[0].shape)
     # CUDA_LAUNCH_BLOCKING=1
 
     EPOCHS = 40
@@ -57,7 +65,7 @@ if __name__ == '__main__':
     HIDDEN_DIM = 50
     COUNT_TYPE_SIZE = 3
 
-    model = LSTM_Tagger(VECTOR_EMBEDDING_DIM, HIDDEN_DIM, COUNT_TYPE_SIZE)
+    model = Hybrid_Tagger(VECTOR_EMBEDDING_DIM, HIDDEN_DIM, COUNT_TYPE_SIZE)
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")

@@ -9,8 +9,8 @@ class FeatureStatisticsClass:
         self.f103_count_dict = OrderedDict()  # Trigram features
         self.f104_count_dict = OrderedDict()  # Bigram features
         self.f105_count_dict = OrderedDict()  # Unigram features
-        self.f106_count_dict = OrderedDict()  # Previous word + tag
-        self.f107_count_dict = OrderedDict()  # Next word + tag
+        self.f106_count_dict = OrderedDict()  # Previous hour + tag
+        self.f107_count_dict = OrderedDict()  # Next hour + tag
 
     def count_features(self, x, y, f100, f103, f104, f105, f106, f107):
         """
@@ -58,22 +58,20 @@ class FeatureStatisticsClass:
             for ctag in day:
                 add_or_append(self.f105_count_dict, ctag)
 
-    # current tag and previous value
     def __count_f106(self, x, y):
         for day, day_tags in zip(x, y):
             for i in range(len(day)):
                 ctag = day_tags[i]
-                phour = day[i-1] if i > 0 else ([BEGIN] * len(day[0]))
-                for index, value in enumerate(phour):
+                prev_hour = day[i-1] if i > 0 else ([BEGIN] * len(day[0]))
+                for index, value in enumerate(prev_hour):
                     add_or_append(self.f106_count_dict, (index, value, ctag))
 
-    # current tags and next value
     def __count_f107(self, x, y):
         for day, day_tags in zip(x, y):
             for i in range(len(day)):
                 tag = day_tags[i]
-                phour = day[i+1] if i < len(day) - 1 else ([STOP] * len(day[0]))
-                for index, value in enumerate(phour):
+                next_hour = day[i+1] if i < len(day) - 1 else ([STOP] * len(day[0]))
+                for index, value in enumerate(next_hour):
                     add_or_append(self.f107_count_dict, (index, value, tag))
 
 
@@ -150,8 +148,8 @@ class Feature2Id:
             for hour, tag in zip(day, day_tags):
                 for index, value in enumerate(hour):
                     key = (index, value, tag)
-                    value = self.f100_counter + self.num_features
-                    self.f100_counter += update_dict(self.f100_index_dict, key, value,
+                    counter = self.f100_counter + self.num_features
+                    self.f100_counter += update_dict(self.f100_index_dict, key, counter,
                                                      self.feat_stats.f100_count_dict, self.threshold)
                     # if key not in self.f100_index_dict and self.feat_stats.f100_count_dict[key] >= self.threshold:
                     #     self.f100_index_dict[key] = self.f100_counter + self.total_features
@@ -164,8 +162,8 @@ class Feature2Id:
             ptag = BEGIN
             for ctag in day_tags:
                 key = (pptag, ptag, ctag)
-                value = self.f103_counter + self.num_features
-                self.f103_counter += update_dict(self.f103_index_dict, key, value,
+                counter = self.f103_counter + self.num_features
+                self.f103_counter += update_dict(self.f103_index_dict, key, counter,
                                                  self.feat_stats.f103_count_dict, self.threshold)
                 # if key not in self.f103_index_dict and self.feat_stats.f103_count_dict[key] >= self.threshold:
                 #     self.f103_index_dict[key] = self.f103_counter + self.total_features
@@ -179,8 +177,8 @@ class Feature2Id:
             ptag = BEGIN
             for ctag in day_tags:
                 key = (ptag, ctag)
-                value = self.f104_counter + self.num_features
-                self.f104_counter += update_dict(self.f104_index_dict, key, value,
+                counter = self.f104_counter + self.num_features
+                self.f104_counter += update_dict(self.f104_index_dict, key, counter,
                                                  self.feat_stats.f104_count_dict, self.threshold)
                 # if key not in self.f104_index_dict and self.feat_stats.f104_count_dict[key] >= self.threshold:
                 #     self.f104_index_dict[key] = self.f104_counter + self.total_features
@@ -192,8 +190,8 @@ class Feature2Id:
         for day_tags in y:
             for ctag in day_tags:
                 key = ctag
-                value = self.f105_counter + self.num_features
-                self.f105_counter += update_dict(self.f105_index_dict, key, value,
+                counter = self.f105_counter + self.num_features
+                self.f105_counter += update_dict(self.f105_index_dict, key, counter,
                                                  self.feat_stats.f105_count_dict, self.threshold)
                 # if key not in self.f105_index_dict and self.feat_stats.f105_count_dict[key] >= self.threshold:
                 #     self.f105_index_dict[key] = self.f105_counter + self.total_features
@@ -207,8 +205,8 @@ class Feature2Id:
                 ctag = day_tags[i]
                 for index, value in enumerate(phour):
                     key = (index, value, ctag)
-                    value = self.f106_counter + self.num_features
-                    self.f106_counter += update_dict(self.f106_index_dict, key, value,
+                    counter = self.f106_counter + self.num_features
+                    self.f106_counter += update_dict(self.f106_index_dict, key, counter,
                                                      self.feat_stats.f106_count_dict, self.threshold)
                     # if key not in self.f106_index_dict and self.feat_stats.f106_count_dict[key] >= self.threshold:
                     #     self.f106_index_dict[key] = self.f106_counter + self.total_features
@@ -222,8 +220,8 @@ class Feature2Id:
                 ctag = day_tags[i]
                 for index, value in enumerate(nhour):
                     key = (index, value, ctag)
-                    value = self.f107_counter + self.num_features
-                    self.f107_counter += update_dict(self.f107_index_dict, key, value,
+                    counter = self.f107_counter + self.num_features
+                    self.f107_counter += update_dict(self.f107_index_dict, key, counter,
                                                      self.feat_stats.f107_count_dict, self.threshold)
         self.num_features += self.f107_counter
 
