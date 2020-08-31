@@ -30,7 +30,7 @@ def one_vs_all(model, name='model'):
 
 def decision_tree(max_depth=None, scale=True):
     test_set_x, test_set_y, train_set_x, train_set_y = dp.prepare_train_test(scale)
-    data_columns = dp.x_columns
+    data_columns = dp.X_COLUMNS
 
     dt = DecisionTreeClassifier(max_depth=max_depth)
     dt.fit(train_set_x, train_set_y)

@@ -16,11 +16,18 @@ def acc(m1, m2):
 
 
 if __name__ == '__main__':
-    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+    X_train, y_train, X_test, y_test = prepare_grouped_data(categorized=True, scale=False)
     model = Log_Linear_MEMM(threshold=0)
-    print("\n\nFitting model\n\n")
+
+    # Fitting
     model.fit(X_train, y_train, i_print=10)
-    model.save('t=0_model')
-    print("\n\nPredicting\n\n")
+    model.save('t=0_categorized_model')
+
+    # Loading
+    # model = Log_Linear_MEMM.load_model(r'dumps/t=10_categorized_model.pkl')
+
+    # Predicting
+    predictions = model.predict(X_train)
+    print(f'model train accuracy {round(acc(predictions, y_train), 3)}')
     predictions = model.predict(X_test)
-    print(f'model accuracy {round(acc(predictions, y_test), 3)}')
+    print(f'model test accuracy {round(acc(predictions, y_test), 3)}')

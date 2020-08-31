@@ -5,8 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from auxiliary_functions import get_x_any_y
 
-x_columns = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'date']
-y_column = 'cnt_categories'
+X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'date']
+Y_COLUMN = 'cnt_categories'
 
 
 def show_hist():
@@ -14,10 +14,10 @@ def show_hist():
     df["cnt"].hist(figsize=(5, 5), grid=False, bins=100)
     buckets = 3
     colors = ["red", "orange", "green"]
-    for i in range(1, buckets+1):
-        print(df["cnt"].quantile(q=i/buckets))
-        plt.vlines(x=df["cnt"].quantile(q=i/buckets), ymin=0, ymax=1750, colors=colors[i-1],
-                   label=f"{int(df['cnt'].quantile(q=i/buckets))} - {np.round(i/buckets, 2)} quantile")
+    for i in range(1, buckets + 1):
+        print(df["cnt"].quantile(q=i / buckets))
+        plt.vlines(x=df["cnt"].quantile(q=i / buckets), ymin=0, ymax=1750, colors=colors[i - 1],
+                   label=f"{int(df['cnt'].quantile(q=i / buckets))} - {round(i / buckets, 2)} quantile")
 
     plt.title("histogram of bicycles count")
     plt.legend()
@@ -30,13 +30,27 @@ def prepare_dataset():
     df["cnt_categories"] = df["cnt"].apply(lambda x: 0 if x < 450 else (1 if x < 1400 else 2))
     df["hour"] = df["timestamp"].apply(lambda x: int(x[11:13]))
     df["date"] = pd.to_datetime(df["timestamp"]).dt.date
-    df["date"] = df["date"].apply(lambda x: int(x.strftime('%d%m%Y')))
-
+    df['date'].apply(lambda x: int(x.strftime('%d%m%Y')))
+    df.drop(['timestamp', 'cnt'], axis=1, inplace=True)
     return df
 
 
-def prepare_train_test(scale=True):
+def prepare_categorized_dataset():
     df = prepare_dataset()
+    for col in df:
+        if col == 'date':
+            continue
+        if len(df[col].unique()) > 24:
+            lower_barrier = df[col].quantile(q=1 / 3)
+            higher_barrier = df[col].quantile(q=2 / 3)
+            df[f'{col}_categorized'] = df[col].\
+                apply(lambda x: 'low' if x < lower_barrier else 'medium' if x < higher_barrier else 'high')
+            df.drop(col, axis=1, inplace=True)
+    return df
+
+
+def prepare_train_test(categorized=False, scale=True):
+    df = prepare_categorized_dataset() if categorized else prepare_dataset()
     dates_in_data = df['date'].unique()
     test_size = 0.25
     train_days, test_days = train_test_split(dates_in_data,
@@ -46,11 +60,11 @@ def prepare_train_test(scale=True):
     test_set = df[df['date'].isin(test_days)]
     train_set = df[df['date'].isin(train_days)]
 
-    test_x = test_set[x_columns]
-    test_y = test_set[y_column]
+    test_x = test_set.drop(Y_COLUMN, axis=1)
+    test_y = test_set[Y_COLUMN]
 
-    train_x = train_set[x_columns]
-    train_y = train_set[y_column]
+    train_x = train_set.drop(Y_COLUMN, axis=1)
+    train_y = train_set[Y_COLUMN]
 
     if scale:
         scalar = StandardScaler()
@@ -63,19 +77,19 @@ def prepare_train_test(scale=True):
     return test_x, test_y, train_x, train_y
 
 
-def prepare_grouped_data(scale=True):
-    df = prepare_dataset()
+def prepare_grouped_data(categorized=False, scale=True):
+    df = prepare_categorized_dataset() if categorized else prepare_dataset()
     dates_in_data = df['date'].unique()
     test_size = 0.25
     train_days, test_days = train_test_split(dates_in_data,
                                              test_size=test_size,
                                              random_state=57)
-    train_x, train_y = get_x_any_y(df, train_days, x_columns, y_column)
-    test_x, test_y = get_x_any_y(df, test_days, x_columns, y_column)
+    train_x, train_y = get_x_any_y(df, train_days, Y_COLUMN)
+    test_x, test_y = get_x_any_y(df, test_days, Y_COLUMN)
 
     if scale:
         train_set = df[df['date'].isin(train_days)]
-        train_set_x = train_set[x_columns]
+        train_set_x = train_set.drop(Y_COLUMN, axis=1)
         scalar = StandardScaler()
         scalar.fit(train_set_x)
 
@@ -87,13 +101,4 @@ def prepare_grouped_data(scale=True):
 
 
 if __name__ == '__main__':
-    # test_x, _, train_x, _ = prepare_train_test(True)
-    # for col in train_x:
-    #     print(col, len(train_x[col].unique()) - len(test_x[col].unique()))
-    # pass
-
-    show_hist()
-
-    df = pd.read_csv(r'london_merged.csv')
-
-    # print(max(df["cnt"]))
+    pass
