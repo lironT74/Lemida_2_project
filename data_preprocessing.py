@@ -29,8 +29,8 @@ def prepare_dataset():
     df = pd.read_csv(r'london_merged.csv')
     df["cnt_categories"] = df["cnt"].apply(lambda x: 0 if x < 450 else (1 if x < 1400 else 2))
     df["hour"] = df["timestamp"].apply(lambda x: int(x[11:13]))
-    df["date"] = pd.to_datetime(df["timestamp"]).dt.date
-    df['date'].apply(lambda x: int(x.strftime('%d%m%Y')))
+    df["date"] = pd.to_datetime(df["timestamp"]).dt.date.\
+        apply(lambda x: int(x.strftime('%d%m%Y')))
     df.drop(['timestamp', 'cnt'], axis=1, inplace=True)
     return df
 
