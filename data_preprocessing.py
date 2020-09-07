@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from auxiliary_functions import get_x_any_y
 
-X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'date']
+X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'month', 'day']
 Y_COLUMN = 'cnt_categories'
 
 
@@ -29,8 +29,16 @@ def prepare_dataset():
     df = pd.read_csv(r'london_merged.csv')
     df["cnt_categories"] = df["cnt"].apply(lambda x: 0 if x < 450 else (1 if x < 1400 else 2))
     df["hour"] = df["timestamp"].apply(lambda x: int(x[11:13]))
-    df["date"] = pd.to_datetime(df["timestamp"]).dt.date.\
+
+    df["date"] = pd.to_datetime(df["timestamp"]).dt.date. \
         apply(lambda x: int(x.strftime('%d%m%Y')))
+
+    df["month"] = pd.to_datetime(df["timestamp"]).dt.date.\
+        apply(lambda x: int(x.strftime('%m%Y')))
+
+    df["day"] = pd.to_datetime(df["timestamp"]).dt.date. \
+        apply(lambda x: int(x.strftime('%d%Y')))
+
     df.drop(['timestamp', 'cnt'], axis=1, inplace=True)
     return df
 
@@ -60,10 +68,10 @@ def prepare_train_test(categorized=False, scale=True):
     test_set = df[df['date'].isin(test_days)]
     train_set = df[df['date'].isin(train_days)]
 
-    test_x = test_set.drop(Y_COLUMN, axis=1)
+    test_x = test_set.drop([Y_COLUMN, 'date'], axis=1)
     test_y = test_set[Y_COLUMN]
 
-    train_x = train_set.drop(Y_COLUMN, axis=1)
+    train_x = train_set.drop([Y_COLUMN, 'date'], axis=1)
     train_y = train_set[Y_COLUMN]
 
     if scale:

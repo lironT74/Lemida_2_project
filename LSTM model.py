@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     EPOCHS = 40
     VECTOR_EMBEDDING_DIM = X_train[0].shape[1]
-    HIDDEN_DIM = 50
+    HIDDEN_DIM = 100
     COUNT_TYPE_SIZE = 3
 
     model = LSTM_Tagger(VECTOR_EMBEDDING_DIM, HIDDEN_DIM, COUNT_TYPE_SIZE)

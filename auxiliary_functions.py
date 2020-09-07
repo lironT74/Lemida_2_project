@@ -12,7 +12,7 @@ def get_x_any_y(df, dates, y_column):
     x, y = [], []
     for date in dates:
         day_df = df[df['date'] == date]
-        x.append(day_df.drop(y_column, axis=1).to_numpy())
+        x.append(day_df.drop([y_column, 'date'], axis=1).to_numpy())
         y.append(day_df[y_column].to_numpy())
     return x, y
 
