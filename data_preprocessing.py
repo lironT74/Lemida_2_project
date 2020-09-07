@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from auxiliary_functions import get_x_any_y
 
-X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'month', 'day']
+X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'month',
+             'day']
 Y_COLUMN = 'cnt_categories'
 
 
@@ -26,18 +27,15 @@ def show_hist():
 
 
 def prepare_dataset():
+    # TODO consider using the function pd.set_index to set the column date as the index of the df
     df = pd.read_csv(r'london_merged.csv')
     df["cnt_categories"] = df["cnt"].apply(lambda x: 0 if x < 450 else (1 if x < 1400 else 2))
     df["hour"] = df["timestamp"].apply(lambda x: int(x[11:13]))
 
-    df["date"] = pd.to_datetime(df["timestamp"]).dt.date. \
-        apply(lambda x: int(x.strftime('%d%m%Y')))
-
-    df["month"] = pd.to_datetime(df["timestamp"]).dt.date.\
-        apply(lambda x: int(x.strftime('%m%Y')))
-
-    df["day"] = pd.to_datetime(df["timestamp"]).dt.date. \
-        apply(lambda x: int(x.strftime('%d%Y')))
+    df['timestamp'] = pd.to_datetime(df['timestamp']).dt.date
+    df["date"] = df['timestamp'].apply(lambda x: int(x.strftime('%d%m%Y')))
+    df["month"] = df['timestamp'].apply(lambda x: int(x.strftime('%m')))
+    df["day"] = df['timestamp'].apply(lambda x: int(x.strftime('%d')))
 
     df.drop(['timestamp', 'cnt'], axis=1, inplace=True)
     return df
@@ -97,7 +95,7 @@ def prepare_grouped_data(categorized=False, scale=True):
 
     if scale:
         train_set = df[df['date'].isin(train_days)]
-        train_set_x = train_set.drop(Y_COLUMN, axis=1)
+        train_set_x = train_set.drop([Y_COLUMN, 'date'], axis=1)
         scalar = StandardScaler()
         scalar.fit(train_set_x)
 
