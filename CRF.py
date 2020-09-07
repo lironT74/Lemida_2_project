@@ -9,7 +9,13 @@ Y_COLUMN = 'cnt_categories'
 def hour2features(hours, i):
     curr_hour = hours[i]
     features = [column + '=' + str(value) for column, value in zip(X_COLUMNS, curr_hour)]
-    features.extend(['bias'])
+    features.append('bias')
+    if i > 0:
+        prev_hour = hours[i-1]
+        prev_features = ['prev_'+column + '=' + str(value) for column, value in zip(X_COLUMNS, prev_hour)]
+        features.extend(prev_features)
+    else:
+        features.append('BOS')
 
     return features
 
