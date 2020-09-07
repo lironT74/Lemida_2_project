@@ -29,7 +29,7 @@ def one_vs_all(model, data, name='model'):
     print(f'{f"One vs All {name} accuracy:":50} {round(acc, 3)}')
 
 
-def decision_tree(data, max_depth=None, save_tree=True):
+def decision_tree(data, max_depth=None, save_tree=False):
     test_set_x, test_set_y, train_set_x, train_set_y = data
     data_columns = dp.X_COLUMNS
 
@@ -51,6 +51,7 @@ def decision_tree(data, max_depth=None, save_tree=True):
     acc = calc_acc(predictions, test_set_y)
     print(f'{"Decision Tree max depth:":50}  {dt.tree_.max_depth}')
     print(f'{"Decision Tree accuracy:":50} {round(acc, 3)}')
+    return acc
 
 
 def logistic_regression(data):
@@ -96,9 +97,11 @@ if __name__ == '__main__':
     for i in range(1, 25):
         acc.append(decision_tree(data, max_depth=i))
 
-    print(np.argmax(acc))
+    best_depth = np.argmax(acc)
+    print(f'The tree that has the highest test accuracy has a depth of {best_depth + 1} '
+          f'and accuracy of {acc[best_depth]:.2f}')
 
-    plt.title("DesicionTree_X test accuracy")
+    plt.title("DecisionTree_X test accuracy")
     plt.plot(range(1, len(acc) + 1), acc, color="fuchsia")
     plt.xlabel("X")
     plt.xticks(range(1, len(acc) + 1))
