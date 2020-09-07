@@ -33,7 +33,6 @@ def train_and_save_model(X_train, y_train, model_path='crf_model.crfsuite'):
         'feature.possible_transitions': True
     })
     trainer.train(model_path)
-    print(trainer.get_params())
 
 
 def evaluate_model(X_test, y_test, model_path='crf_model.crfsuite'):
