@@ -19,7 +19,7 @@ def date2features(day):
     return [hour2features(day, i) for i in range(len(day))]
 
 
-def train_and_save_model(X_train, y_train, model_path='trying_the_model.crfsuite'):
+def train_and_save_model(X_train, y_train, model_path='crf_model.crfsuite'):
     X_train = [date2features(x) for x in X_train]
     y_train = [[str(label) for label in y] for y in y_train]
     trainer = pycrfsuite.Trainer(verbose=False)
