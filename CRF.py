@@ -7,7 +7,6 @@ Y_COLUMN = 'cnt_categories'
 
 
 def hour2features(hours, i):
-    # print(type(hours))
     curr_hour = hours[i]
     features = [column + '=' + str(value) for column, value in zip(X_COLUMNS, curr_hour)]
     features.extend(['bias'])
@@ -16,13 +15,11 @@ def hour2features(hours, i):
 
 
 def date2features(day):
-    # print(day)
     return [hour2features(day, i) for i in range(len(day))]
 
 
 def train_and_save_model(X_train, y_train, model_path='trying_the_model.crfsuite'):
-    X_train = [date2features(x) for x, _ in zip(X_train, y_train)]
-    # print(X_train[0][0])
+    X_train = [date2features(x) for x in X_train]
     y_train = [[str(label) for label in y] for y in y_train]
     trainer = pycrfsuite.Trainer(verbose=False)
     for xseq, yseq in zip(X_train, y_train):
@@ -38,7 +35,7 @@ def train_and_save_model(X_train, y_train, model_path='trying_the_model.crfsuite
 
 
 def evaluate_model(X_test, y_test, model_path='trying_the_model.crfsuite'):
-    X_test = [date2features(x) for x, _ in zip(X_test, y_test)]
+    X_test = [date2features(x) for x in X_test]
     y_test = [[str(label) for label in y] for y in y_test]
     tagger = pycrfsuite.Tagger()
     tagger.open(model_path)
@@ -49,12 +46,11 @@ def evaluate_model(X_test, y_test, model_path='trying_the_model.crfsuite'):
         acc += np.sum(predicted == corrected) / (24 * len(X_test))
     print(f'Accuracy: {acc}')
 
-X_train, y_train, X_test, y_test = prepare_grouped_data(scale=False)
-print(X_train[0][0])
-print(hour2features())
-train_and_save_model(X_train, y_train)
-# print(X_train[0][0])
-evaluate_model(X_test, y_test)
+
+if __name__ == '__main__':
+    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=False)
+    train_and_save_model(X_train, y_train)  #print(X_train[0][0])
+    evaluate_model(X_test, y_test)
 
 
 
