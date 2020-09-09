@@ -20,10 +20,11 @@ def get_x_any_y(df, dates, y_column):
 def get_x_any_y_years(df, years, y_column):
     x, y = [], []
     for year in years:
-        day_df = df[df['year'] == year]
-        x.append(day_df.drop([y_column, 'date', 'year'], axis=1).to_numpy())
-        y.append(day_df[y_column].to_numpy())
+        yers_df = df[df['year'] == year]
+        x.append(yers_df.drop([y_column, 'date', 'year'], axis=1).to_numpy())
+        y.append(yers_df[y_column].to_numpy())
     return x, y
+
 
 def multiply_sparse(v, f):
     """

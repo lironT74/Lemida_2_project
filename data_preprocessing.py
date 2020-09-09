@@ -5,8 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from auxiliary_functions import get_x_any_y, get_x_any_y_years
 
-X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'month',
-             'day']
+X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'year', 'month',
+             'day', 'hour']
 Y_COLUMN = 'cnt_categories'
 
 
@@ -103,30 +103,6 @@ def prepare_grouped_data(categorized=False, scale=True):
 
     if scale:
         train_set = df[df['date'].isin(train_days)]
-        train_set_x = train_set.drop([Y_COLUMN, 'date'], axis=1)
-        scalar = StandardScaler()
-        scalar.fit(train_set_x)
-
-        scaled_train_x = [scalar.transform(day) for day in train_x]
-        scaled_test_x = [scalar.transform(day) for day in test_x]
-        return scaled_train_x, train_y, scaled_test_x, test_y
-
-    return train_x, train_y, test_x, test_y
-
-
-def divide_data_to_two_years(categorized=False, scale=True):
-    df = prepare_categorized_dataset() if categorized else prepare_dataset()
-    dates_in_data = df['date'].unique()
-    test_size = 0.25
-
-    train_years = ["2015"]
-    test_years = ["2016"]
-
-    train_x, train_y = get_x_any_y_years(df, train_years, Y_COLUMN)
-    test_x, test_y = get_x_any_y_years(df, test_years, Y_COLUMN)
-
-    if scale:
-        train_set = df[df['year'].isin(train_years)]
         train_set_x = train_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
         scalar = StandardScaler()
         scalar.fit(train_set_x)
@@ -136,6 +112,31 @@ def divide_data_to_two_years(categorized=False, scale=True):
         return scaled_train_x, train_y, scaled_test_x, test_y
 
     return train_x, train_y, test_x, test_y
+
+def divide_data_to_two_years(categorized=False, scale=True):
+    df = prepare_categorized_dataset() if categorized else prepare_dataset()
+
+    train_years = [2015]
+    test_years = [2016]
+
+    train_x, train_y = get_x_any_y_years(df, train_years, Y_COLUMN)
+    test_x, test_y = get_x_any_y_years(df, test_years, Y_COLUMN)
+
+
+    if scale:
+        train_set = df[df['year'].isin(train_years)]
+        train_set_x = train_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
+
+        scalar = StandardScaler()
+        scalar.fit(train_set_x)
+
+        scaled_train_x = [scalar.transform(year) for year in train_x]
+        scaled_test_x = [scalar.transform(year) for year in test_x]
+
+        return np.array(scaled_train_x), np.array(train_y), np.array(scaled_test_x), np.array(test_y)
+
+    return np.array(train_x), np.array(train_y), np.array(test_x), np.array(test_y)
+
 
 
 if __name__ == '__main__':
