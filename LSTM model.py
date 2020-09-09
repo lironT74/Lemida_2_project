@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 
-from data_preprocessing import prepare_grouped_data
+from data_preprocessing import *
 
 
 class LSTM_Tagger(nn.Module):
@@ -45,7 +45,11 @@ def evaluate(X_test, y_test):
 
 if __name__ == '__main__':
     print('hey5')
-    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+    # X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+
+    X_train, y_train, X_test, y_test = divide_data_to_two_years(scale=True)
+
+    print(X_train)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -75,6 +79,7 @@ if __name__ == '__main__':
     accuracy_list = []
     loss_list = []
     epochs = EPOCHS
+
     for epoch in range(epochs):
         acc = 0  # to keep track of accuracy
         printable_loss = 0  # To keep track of the loss value

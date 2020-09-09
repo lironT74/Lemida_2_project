@@ -3,7 +3,7 @@ from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from auxiliary_functions import get_x_any_y
+from auxiliary_functions import get_x_any_y, get_x_any_y_years
 
 X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'month',
              'day']
@@ -37,6 +37,8 @@ def prepare_dataset():
     df["month"] = df['timestamp'].apply(lambda x: int(x.strftime('%m')))
     df["day"] = df['timestamp'].apply(lambda x: int(x.strftime('%d')))
 
+    df["year"] = df['timestamp'].apply(lambda x: int(x.strftime('%Y')))
+
     df.drop(['timestamp', 'cnt'], axis=1, inplace=True)
     return df
 
@@ -55,21 +57,24 @@ def prepare_categorized_dataset():
     return df
 
 
-def prepare_train_test(categorized=False, scale=True):
+def prepare_train_test(categorized=False, scale=True, **kwargs):
+
+    seed = kwargs.get("seed", 57)
+
     df = prepare_categorized_dataset() if categorized else prepare_dataset()
     dates_in_data = df['date'].unique()
     test_size = 0.25
     train_days, test_days = train_test_split(dates_in_data,
                                              test_size=test_size,
-                                             random_state=57)
+                                             random_state=seed)
 
     test_set = df[df['date'].isin(test_days)]
     train_set = df[df['date'].isin(train_days)]
 
-    test_x = test_set.drop([Y_COLUMN, 'date'], axis=1)
+    test_x = test_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
     test_y = test_set[Y_COLUMN]
 
-    train_x = train_set.drop([Y_COLUMN, 'date'], axis=1)
+    train_x = train_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
     train_y = train_set[Y_COLUMN]
 
     if scale:
@@ -87,15 +92,42 @@ def prepare_grouped_data(categorized=False, scale=True):
     df = prepare_categorized_dataset() if categorized else prepare_dataset()
     dates_in_data = df['date'].unique()
     test_size = 0.25
+
     train_days, test_days = train_test_split(dates_in_data,
                                              test_size=test_size,
                                              random_state=57)
+
+
     train_x, train_y = get_x_any_y(df, train_days, Y_COLUMN)
     test_x, test_y = get_x_any_y(df, test_days, Y_COLUMN)
 
     if scale:
         train_set = df[df['date'].isin(train_days)]
         train_set_x = train_set.drop([Y_COLUMN, 'date'], axis=1)
+        scalar = StandardScaler()
+        scalar.fit(train_set_x)
+
+        scaled_train_x = [scalar.transform(day) for day in train_x]
+        scaled_test_x = [scalar.transform(day) for day in test_x]
+        return scaled_train_x, train_y, scaled_test_x, test_y
+
+    return train_x, train_y, test_x, test_y
+
+
+def divide_data_to_two_years(categorized=False, scale=True):
+    df = prepare_categorized_dataset() if categorized else prepare_dataset()
+    dates_in_data = df['date'].unique()
+    test_size = 0.25
+
+    train_years = ["2015"]
+    test_years = ["2016"]
+
+    train_x, train_y = get_x_any_y_years(df, train_years, Y_COLUMN)
+    test_x, test_y = get_x_any_y_years(df, test_years, Y_COLUMN)
+
+    if scale:
+        train_set = df[df['year'].isin(train_years)]
+        train_set_x = train_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
         scalar = StandardScaler()
         scalar.fit(train_set_x)
 
