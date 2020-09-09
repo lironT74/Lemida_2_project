@@ -113,6 +113,7 @@ def prepare_grouped_data(categorized=False, scale=True):
 
     return train_x, train_y, test_x, test_y
 
+
 def divide_data_to_two_years(categorized=False, scale=True):
     df = prepare_categorized_dataset() if categorized else prepare_dataset()
 
