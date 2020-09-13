@@ -230,8 +230,8 @@ def CM_LSTM_per_hour():
     ax.set_xticks(np.arange(24))
     ax.set_yticks(np.arange(24))
 
-    ax.set_xticklabels(list(range(1,25,1)), fontsize=fontsize - 4)
-    ax.set_yticklabels(list(range(1,25,1)), fontsize=fontsize - 4)
+    ax.set_xticklabels(list(range(24)), fontsize=fontsize - 4)
+    ax.set_yticklabels(list(range(24)), fontsize=fontsize - 4)
 
     # plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
 
@@ -252,14 +252,11 @@ def LSTM_CM():
         for pred, label in zip(predictions, y):
             confusion_matrix[label][pred] += 1
 
-    print(confusion_matrix)
 
     for i in range(confusion_matrix.shape[0]):
         sum = np.sum(confusion_matrix[i])
         for j in range(confusion_matrix.shape[1]):
             confusion_matrix[i][j] = np.round(confusion_matrix[i][j] / sum, 3)
-
-    print(confusion_matrix)
 
 
     fontsize = 10
@@ -293,11 +290,12 @@ def LSTM_CM():
 
 if __name__ == '__main__':
 
-    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
-
-    print(X_train)
+    # X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+    #
+    # print(X_train)
 
     # model = train_model(verbose=True)
     # save_model(model, 'lstm_model')
 
+    CM_LSTM_per_hour()
     LSTM_CM()
