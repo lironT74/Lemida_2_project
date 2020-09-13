@@ -198,19 +198,69 @@ def load_model(model_fname):
     return model
 
 
-if __name__ == '__main__':
-    # model = train_model(verbose=True)
-    # save_model(model, 'lstm_model')
+def CM_LSTM_per_hour():
+    model = load_model('lstm_model')
 
+    _, _, X_test, y_test = prepare_grouped_data(scale=True)
+
+    confusion_matrix = np.zeros((24, 24), int)
+
+    for x, y in zip(X_test, y_test):
+        _, predictions = torch.max(model(x), 1)
+
+        for day, (pred, label) in enumerate(zip(predictions, y)):
+
+            confusion_matrix[day][day] += int(pred != label)
+
+    confusion_matrix = np.round(confusion_matrix / np.sum(confusion_matrix), 2)
+
+    fontsize = 32
+    fig, ax = plt.subplots(figsize=(20,20))
+
+    max = np.max(confusion_matrix)
+
+    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
+    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
+
+    divider1 = make_axes_locatable(ax)
+    cax = divider1.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
+
+
+    ax.set_xticks(np.arange(24))
+    ax.set_yticks(np.arange(24))
+
+    ax.set_xticklabels(list(range(1,25,1)), fontsize=fontsize - 4)
+    ax.set_yticklabels(list(range(1,25,1)), fontsize=fontsize - 4)
+
+    # plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
+
+    for i in range(24):
+        text = ax.text(i, i, s = str(confusion_matrix[i][i]),
+                        ha="center", va="center", color='w', fontsize=fontsize-7)
+    ax.set_title("LSTM predictions mistakes ratio counts on hours", fontsize=fontsize + 4)
+
+    plt.show()
+
+
+def LSTM_CM():
     model = load_model('lstm_model')
     _, _, X_test, y_test = prepare_grouped_data(scale=True)
-    confusion_matrix = np.zeros((3, 3), int)
+    confusion_matrix = np.zeros((3, 3))
     for x, y in zip(X_test, y_test):
         _, predictions = torch.max(model(x), 1)
         for pred, label in zip(predictions, y):
             confusion_matrix[label][pred] += 1
 
     print(confusion_matrix)
+
+    for i in range(confusion_matrix.shape[0]):
+        sum = np.sum(confusion_matrix[i])
+        for j in range(confusion_matrix.shape[1]):
+            confusion_matrix[i][j] = np.round(confusion_matrix[i][j] / sum, 3)
+
+    print(confusion_matrix)
+
 
     fontsize = 10
     fig, ax = plt.subplots()
@@ -228,13 +278,26 @@ if __name__ == '__main__':
 
     ax.set_xticklabels(['low', 'medium', 'high'], fontsize=fontsize)
     ax.set_yticklabels(['low', 'medium', 'high'], fontsize=fontsize)
+
+    ax.set_xlabel("predictions", fontsize=fontsize)
+    ax.set_ylabel("labels", fontsize=fontsize)
+
     plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
     for i in range(3):
         for j in range(3):
-            text = ax.text(j, i, confusion_matrix[i,j],
-                            ha="center", va="center", fontsize=fontsize)
+            text = ax.text(j, i, confusion_matrix[i, j],
+                           ha="center", va="center", color='w', fontsize=fontsize)
     ax.set_title("Confusion matrix for LSTM predictions", fontsize=fontsize + 4)
 
-    # sns.heatmap(data=confusion_matrix, vmin=0)
-
     plt.show()
+
+if __name__ == '__main__':
+
+    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+
+    print(X_train)
+
+    # model = train_model(verbose=True)
+    # save_model(model, 'lstm_model')
+
+    LSTM_CM()
