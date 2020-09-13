@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from data_preprocessing import *
+import pickle
 
 
 class LSTM_Tagger(nn.Module):
@@ -30,10 +31,10 @@ class LSTM_Tagger(nn.Module):
         return count_type_scores
 
 
-def evaluate(X_test, y_test):
+def evaluate(model, device, X_test, y_test):
     acc = 0
     with torch.no_grad():
-        for day_index in np.random.permutation(len(X_test)):
+        for day_index in range(len(X_test)):
             hours_array = X_test[day_index]
             counts_tensor = torch.from_numpy(y_test[day_index]).to(device)
             counts_scores = model(hours_array)
@@ -44,7 +45,7 @@ def evaluate(X_test, y_test):
     return acc
 
 
-def evaluate_per_hour(X_test, y_test):
+def evaluate_per_hour(model, X_test, y_test):
     with torch.no_grad():
         counts_scores = model(X_test)
         _, predictions = torch.max(counts_scores, 1)
@@ -110,7 +111,7 @@ def whole_year():
 
     loss_list.append(float(printable_loss))
     accuracy_list.append(float(acc))
-    test_acc = evaluate_per_hour(X_test[0], y_test)
+    test_acc = evaluate_per_hour(model, X_test[0], y_test)
     e_interval = i
     print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
           .format(0 + 1,
@@ -119,38 +120,37 @@ def whole_year():
                   test_acc))
 
 
-if __name__ == '__main__':
+def train_model(verbose=True):
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    print(X_train.shape)
-    print(X_test.shape)
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #
+    # print(X_train.shape)
+    # print(X_test.shape)
 
     # CUDA_LAUNCH_BLOCKING=1
 
-    EPOCHS = 40
-    VECTOR_EMBEDDING_DIM = X_train[0].shape[1]
-    HIDDEN_DIM = 100
-    COUNT_TYPE_SIZE = 3
+    epochs = 40
+    vector_embedding_dim = X_train[0].shape[1]
+    hidden_dim = 100
+    count_type_size = 3
+    accumulate_grad_steps = 70  # This is the actual batch_size, while we officially use batch_size=1
 
-    model = LSTM_Tagger(VECTOR_EMBEDDING_DIM, HIDDEN_DIM, COUNT_TYPE_SIZE)
+    model = LSTM_Tagger(vector_embedding_dim, hidden_dim, count_type_size)
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")
-
     if use_cuda:
         model.cuda()
+
     loss_function = nn.NLLLoss()
-    # loss_function = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01)
 
-    accumulate_grad_steps = 70  # This is the actual batch_size, while we officially use batch_size=1
-
     # Training start
-    print("Training Started")
+    if verbose:
+        print("Training Started")
     accuracy_list = []
     loss_list = []
-    epochs = EPOCHS
+    epochs = epochs
 
     for epoch in range(epochs):
         acc = 0  # to keep track of accuracy
@@ -176,14 +176,33 @@ if __name__ == '__main__':
 
             acc += np.mean(counts_tensor.to("cpu").numpy() == indices.to("cpu").numpy())
 
-        printable_loss = accumulate_grad_steps * (printable_loss / len(X_train))
-        acc = acc / len(X_train)
-        loss_list.append(float(printable_loss))
-        accuracy_list.append(float(acc))
-        test_acc = evaluate_per_hour(X_test, y_test)
-        e_interval = i
-        print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
-              .format(epoch + 1,
-                      np.mean(loss_list[-e_interval:]),
-                      np.mean(accuracy_list[-e_interval:]),
-                      test_acc))
+        if verbose:
+            printable_loss = accumulate_grad_steps * (printable_loss / len(X_train))
+            acc = acc / len(X_train)
+            loss_list.append(float(printable_loss))
+            accuracy_list.append(float(acc))
+            test_acc = evaluate(model, device, X_test, y_test)
+            e_interval = i
+            print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
+                  .format(epoch + 1,
+                          np.mean(loss_list[-e_interval:]),
+                          np.mean(accuracy_list[-e_interval:]),
+                          test_acc))
+    return model
+
+
+def save_model(model, model_fname):
+    with open(f'dumps/{model_fname}', 'wb') as f:
+        pickle.dump(model, f)
+
+
+def load_model(model_fname):
+    with open(f'dumps/{model_fname}', 'rb') as f:
+        model = pickle.load(f)
+    return model
+
+
+if __name__ == '__main__':
+    # model = train_model(verbose=True)
+    # save_model(model, 'lstm_model')
+    pass
