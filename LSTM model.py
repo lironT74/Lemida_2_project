@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import numpy as np
 
 from data_preprocessing import *
 
@@ -15,12 +14,11 @@ class LSTM_Tagger(nn.Module):
                             num_layers=2, bidirectional=True, batch_first=False)
         self.hidden_to_count = nn.Linear(hidden_dim * 2, num_classes)
 
-
     def forward(self, hours_array, get_hidden_layer=False):
-
         hours_tensor = torch.from_numpy(hours_array).float().to(self.device)
 
-        lstm_out, _ = self.lstm(hours_tensor.view(hours_tensor.shape[0], 1, -1))  # [seq_length, batch_size, 2*hidden_dim]
+        lstm_out, _ = self.lstm(
+            hours_tensor.view(hours_tensor.shape[0], 1, -1))  # [seq_length, batch_size, 2*hidden_dim]
 
         if get_hidden_layer:
             return lstm_out
@@ -52,12 +50,10 @@ def evaluate_per_hour(X_test, y_test):
         _, predictions = torch.max(counts_scores, 1)
         predictions = predictions.to("cpu").numpy()
 
-    return np.average([pred==real for pred, real in zip(predictions, y_test)])
-
+    return np.average([pred == real for pred, real in zip(predictions, y_test)])
 
 
 def whole_year():
-
     X_train, y_train, X_test, y_test = divide_data_to_two_years(scale=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -123,7 +119,6 @@ def whole_year():
                   test_acc))
 
 
-
 if __name__ == '__main__':
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -157,7 +152,6 @@ if __name__ == '__main__':
     loss_list = []
     epochs = EPOCHS
 
-
     for epoch in range(epochs):
         acc = 0  # to keep track of accuracy
         printable_loss = 0  # To keep track of the loss value
@@ -181,7 +175,6 @@ if __name__ == '__main__':
             _, indices = torch.max(counts_scores, 1)
 
             acc += np.mean(counts_tensor.to("cpu").numpy() == indices.to("cpu").numpy())
-
 
         printable_loss = accumulate_grad_steps * (printable_loss / len(X_train))
         acc = acc / len(X_train)
