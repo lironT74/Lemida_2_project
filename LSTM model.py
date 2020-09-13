@@ -5,6 +5,9 @@ import torch.optim as optim
 
 from data_preprocessing import *
 import pickle
+import seaborn as sns
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 class LSTM_Tagger(nn.Module):
@@ -122,12 +125,6 @@ def whole_year():
 
 def train_model(verbose=True):
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    #
-    # print(X_train.shape)
-    # print(X_test.shape)
-
-    # CUDA_LAUNCH_BLOCKING=1
 
     epochs = 40
     vector_embedding_dim = X_train[0].shape[1]
@@ -205,4 +202,35 @@ def load_model(model_fname):
 if __name__ == '__main__':
     # model = train_model(verbose=True)
     # save_model(model, 'lstm_model')
-    pass
+
+    model = load_model('lstm_model')
+    _, _, X_test, y_test = prepare_grouped_data(scale=True)
+    confusion_matrix = np.zeros((3, 3), int)
+    for x, y in zip(X_test, y_test):
+        _, predictions = torch.max(model(x), 1)
+        for pred, label in zip(predictions, y):
+            confusion_matrix[label][pred] += 1
+
+    # fontsize = 10
+    # fig, ax = plt.subplots()
+    #
+    # sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=1))
+    # im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=1))
+    # divider1 = make_axes_locatable(ax)
+    # cax = divider1.append_axes("right", size="5%", pad=0.05)
+    # fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
+    #
+    # ax.set_xticks(np.arange(3))
+    # ax.set_yticks(np.arange(3))
+    # ax.set_xticklabels(['low', 'medium', 'high'], fontsize=fontsize)
+    # ax.set_yticklabels(['low', 'medium', 'high'], fontsize=fontsize)
+    # plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
+    # for i in range(3):
+    #     for j in range(3):
+    #         text = ax.text(j, i, str(i*3+j),
+    #                         ha="center", va="center", color="w", fontsize=fontsize)
+    # ax.set_title("TITLE", fontsize=fontsize + 4)
+
+    # sns.heatmap(data=confusion_matrix, vmin=0)
+
+    plt.show()
