@@ -5,7 +5,6 @@ import torch.optim as optim
 
 from data_preprocessing import *
 import pickle
-import seaborn as sns
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -211,25 +210,30 @@ if __name__ == '__main__':
         for pred, label in zip(predictions, y):
             confusion_matrix[label][pred] += 1
 
-    # fontsize = 10
-    # fig, ax = plt.subplots()
-    #
-    # sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=1))
-    # im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=1))
-    # divider1 = make_axes_locatable(ax)
-    # cax = divider1.append_axes("right", size="5%", pad=0.05)
-    # fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
-    #
-    # ax.set_xticks(np.arange(3))
-    # ax.set_yticks(np.arange(3))
-    # ax.set_xticklabels(['low', 'medium', 'high'], fontsize=fontsize)
-    # ax.set_yticklabels(['low', 'medium', 'high'], fontsize=fontsize)
-    # plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
-    # for i in range(3):
-    #     for j in range(3):
-    #         text = ax.text(j, i, str(i*3+j),
-    #                         ha="center", va="center", color="w", fontsize=fontsize)
-    # ax.set_title("TITLE", fontsize=fontsize + 4)
+    print(confusion_matrix)
+
+    fontsize = 10
+    fig, ax = plt.subplots()
+
+    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=np.max(confusion_matrix)))
+    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=np.max(confusion_matrix)))
+    im = ax.imshow(confusion_matrix, cmap='jet')
+
+    divider1 = make_axes_locatable(ax)
+    cax = divider1.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
+
+    ax.set_xticks(np.arange(3))
+    ax.set_yticks(np.arange(3))
+
+    ax.set_xticklabels(['low', 'medium', 'high'], fontsize=fontsize)
+    ax.set_yticklabels(['low', 'medium', 'high'], fontsize=fontsize)
+    plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
+    for i in range(3):
+        for j in range(3):
+            text = ax.text(j, i, confusion_matrix[i,j],
+                            ha="center", va="center", fontsize=fontsize)
+    ax.set_title("Confusion matrix for LSTM predictions", fontsize=fontsize + 4)
 
     # sns.heatmap(data=confusion_matrix, vmin=0)
 
