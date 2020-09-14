@@ -7,7 +7,7 @@ from data_preprocessing import *
 import pickle
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from utils import create_month_dict
+from auxiliary_functions import create_month_dict
 
 
 class LSTM_Tagger(nn.Module):
@@ -332,8 +332,29 @@ def LSTM_confusion_matrix_per_month(model):
                               title=f'LSTM confusion matrix for month {month + 1}')
 
 
+def LSTM_error_rate_per_hour(model):
+    _, _, X_test, y_test = prepare_grouped_data(scale=True)
+    n = len(X_test)
+
+    errors = np.zeros(24)
+    counts = np.zeros(24)
+    for x, y in zip(X_test, y_test):
+        _, predictions = torch.max(model(x), 1)
+        for i in range(len(x)):
+            if predictions[i] != y[i]:
+                errors[i] += 1
+            counts[i] += 1
+    error_rate = errors / np.sum(errors)
+
+    plt.bar(np.arange(1, 25), error_rate)
+    plt.xticks(np.arange(1, 25))
+    # plt.yticks(np.arange(0, 1.01, 0.05))
+    plt.title('Error Rate per Hour')
+    plt.show()
+
+
 if __name__ == '__main__':
     # model = train_model(verbose=True)
     # save_model(model, 'lstm_model')
     model = load_model('lstm_model')
-    LSTM_confusion_matrix_per_month(model)
+    LSTM_error_rate_per_hour(model)
