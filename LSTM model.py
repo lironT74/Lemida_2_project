@@ -199,8 +199,7 @@ def load_model(model_fname):
     return model
 
 
-def CM_LSTM_per_hour():
-    model = load_model('lstm_model')
+def CM_LSTM_per_hour(model):
 
     _, _, X_test, y_test = prepare_grouped_data(scale=True)
 
@@ -236,10 +235,11 @@ def CM_LSTM_per_hour():
 
     for i in range(24):
         text = ax.text(i, i, s=str(confusion_matrix[i][i]),
-                       ha="center", va="center", color='w', fontsize=fontsize - 7)
+                       ha="center", va="center", color='w', fontsize=fontsize - 9)
     ax.set_title("LSTM predictions mistakes ratio counts on hours", fontsize=fontsize + 4)
 
-    plt.show()
+    plt.savefig(f"./cms/LSTM predictions mistakes ratio counts on hours.png")
+    # plt.show()
 
 
 def LSTM_CM(model):
@@ -286,7 +286,8 @@ def draw_confusion_matrix(confusion_matrix, xtick_labels=None, ytick_labels=None
     if title:
         ax.set_title(title, fontsize=fontsize + 4)
 
-    plt.show()
+    plt.savefig(f"./cms/{title}.png")
+    # plt.show()
 
 
 def LSTM_confusion_matrix_per_day(model):
