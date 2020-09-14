@@ -2,9 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import numpy as np
 
-from data_preprocessing import prepare_grouped_data
+from data_preprocessing import *
+import pickle
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from utils import create_month_dict
 
 
 class LSTM_Tagger(nn.Module):
@@ -17,7 +20,9 @@ class LSTM_Tagger(nn.Module):
 
     def forward(self, hours_array, get_hidden_layer=False):
         hours_tensor = torch.from_numpy(hours_array).float().to(self.device)
-        lstm_out, _ = self.lstm(hours_tensor.view(hours_tensor.shape[0], 1, -1))  # [seq_length, batch_size, 2*hidden_dim]
+
+        lstm_out, _ = self.lstm(
+            hours_tensor.view(hours_tensor.shape[0], 1, -1))  # [seq_length, batch_size, 2*hidden_dim]
 
         if get_hidden_layer:
             return lstm_out
@@ -29,10 +34,10 @@ class LSTM_Tagger(nn.Module):
         return count_type_scores
 
 
-def evaluate(X_test, y_test):
+def evaluate(model, device, X_test, y_test):
     acc = 0
     with torch.no_grad():
-        for day_index in np.random.permutation(len(X_test)):
+        for day_index in range(len(X_test)):
             hours_array = X_test[day_index]
             counts_tensor = torch.from_numpy(y_test[day_index]).to(device)
             counts_scores = model(hours_array)
@@ -43,13 +48,23 @@ def evaluate(X_test, y_test):
     return acc
 
 
-if __name__ == '__main__':
-    print('hey5')
-    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+def evaluate_per_hour(model, X_test, y_test):
+    with torch.no_grad():
+        counts_scores = model(X_test)
+        _, predictions = torch.max(counts_scores, 1)
+        predictions = predictions.to("cpu").numpy()
+
+    return np.average([pred == real for pred, real in zip(predictions, y_test)])
+
+
+def whole_year():
+    X_train, y_train, X_test, y_test = divide_data_to_two_years(scale=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print(X_train[0].shape)
+    print(X_train.shape)
+    print(X_test.shape)
+
     # CUDA_LAUNCH_BLOCKING=1
 
     EPOCHS = 40
@@ -75,6 +90,65 @@ if __name__ == '__main__':
     accuracy_list = []
     loss_list = []
     epochs = EPOCHS
+
+    acc = 0  # to keep track of accuracy
+    printable_loss = 0  # To keep track of the loss value
+    i = 0
+
+    counts_tensor = torch.from_numpy(y_train[0]).to(device)
+    counts_scores = model(X_train[0])
+
+    loss = loss_function(counts_scores, counts_tensor)
+    loss /= accumulate_grad_steps
+    loss.backward()
+
+    if i % accumulate_grad_steps == 0:
+        optimizer.step()
+        model.zero_grad()
+    printable_loss += loss.item()
+    _, indices = torch.max(counts_scores, 1)
+
+    acc += np.mean(counts_tensor.to("cpu").numpy() == indices.to("cpu").numpy())
+    printable_loss = accumulate_grad_steps * (printable_loss / len(X_train))
+    acc = acc / len(X_train[0])
+
+    loss_list.append(float(printable_loss))
+    accuracy_list.append(float(acc))
+    test_acc = evaluate_per_hour(model, X_test[0], y_test)
+    e_interval = i
+    print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
+          .format(0 + 1,
+                  np.mean(loss_list[-e_interval:]),
+                  np.mean(accuracy_list[-e_interval:]),
+                  test_acc))
+
+
+def train_model(verbose=True):
+    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+
+    epochs = 40
+    vector_embedding_dim = X_train[0].shape[1]
+    hidden_dim = 100
+    count_type_size = 3
+    accumulate_grad_steps = 70  # This is the actual batch_size, while we officially use batch_size=1
+
+    model = LSTM_Tagger(vector_embedding_dim, hidden_dim, count_type_size)
+
+    use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda:0" if use_cuda else "cpu")
+    if use_cuda:
+        model.cuda()
+
+    loss_function = nn.NLLLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+    # Training start
+    if verbose:
+        print("Training Started")
+    accuracy_list = []
+    loss_list = []
+    epochs = epochs
+
     for epoch in range(epochs):
         acc = 0  # to keep track of accuracy
         printable_loss = 0  # To keep track of the loss value
@@ -99,14 +173,170 @@ if __name__ == '__main__':
 
             acc += np.mean(counts_tensor.to("cpu").numpy() == indices.to("cpu").numpy())
 
-        printable_loss = accumulate_grad_steps * (printable_loss / len(X_train))
-        acc = acc / len(X_train)
-        loss_list.append(float(printable_loss))
-        accuracy_list.append(float(acc))
-        test_acc = evaluate(X_test, y_test)
-        e_interval = i
-        print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
-              .format(epoch + 1,
-                      np.mean(loss_list[-e_interval:]),
-                      np.mean(accuracy_list[-e_interval:]),
-                      test_acc))
+        if verbose:
+            printable_loss = accumulate_grad_steps * (printable_loss / len(X_train))
+            acc = acc / len(X_train)
+            loss_list.append(float(printable_loss))
+            accuracy_list.append(float(acc))
+            test_acc = evaluate(model, device, X_test, y_test)
+            e_interval = i
+            print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
+                  .format(epoch + 1,
+                          np.mean(loss_list[-e_interval:]),
+                          np.mean(accuracy_list[-e_interval:]),
+                          test_acc))
+    return model
+
+
+def save_model(model, model_fname):
+    with open(f'dumps/{model_fname}', 'wb') as f:
+        pickle.dump(model, f)
+
+
+def load_model(model_fname):
+    with open(f'dumps/{model_fname}', 'rb') as f:
+        model = pickle.load(f)
+    return model
+
+
+def CM_LSTM_per_hour(model):
+
+    _, _, X_test, y_test = prepare_grouped_data(scale=True)
+
+    confusion_matrix = np.zeros((24, 24), int)
+
+    for x, y in zip(X_test, y_test):
+        _, predictions = torch.max(model(x), 1)
+
+        for day, (pred, label) in enumerate(zip(predictions, y)):
+            confusion_matrix[day][day] += int(pred != label)
+
+    confusion_matrix = np.round(confusion_matrix / np.sum(confusion_matrix), 2)
+
+    fontsize = 32
+    fig, ax = plt.subplots(figsize=(20, 20))
+
+    max = np.max(confusion_matrix)
+
+    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
+    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
+
+    divider1 = make_axes_locatable(ax)
+    cax = divider1.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
+
+    ax.set_xticks(np.arange(24))
+    ax.set_yticks(np.arange(24))
+
+    ax.set_xticklabels(list(range(24)), fontsize=fontsize - 4)
+    ax.set_yticklabels(list(range(24)), fontsize=fontsize - 4)
+
+    # plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
+
+    for i in range(24):
+        text = ax.text(i, i, s=str(confusion_matrix[i][i]),
+                       ha="center", va="center", color='w', fontsize=fontsize - 9)
+    ax.set_title("LSTM predictions mistakes ratio counts on hours", fontsize=fontsize + 4)
+
+    plt.savefig(f"./cms/LSTM predictions mistakes ratio counts on hours.png")
+    # plt.show()
+
+
+def LSTM_CM(model):
+    _, _, X_test, y_test = prepare_grouped_data(scale=True)
+    confusion_matrix = np.zeros((3, 3))
+    for x, y in zip(X_test, y_test):
+        _, predictions = torch.max(model(x), 1)
+        for pred, label in zip(predictions, y):
+            confusion_matrix[label][pred] += 1
+
+    for i in range(len(confusion_matrix)):
+        confusion_matrix[i] = np.round(confusion_matrix[i] / np.sum(confusion_matrix[i]), 3)
+
+    draw_confusion_matrix(confusion_matrix, xtick_labels=['low', 'medium', 'high'],
+                          ytick_labels=['low', 'medium', 'high'], title='Confusion matrix for LSTM predictions')
+
+
+def draw_confusion_matrix(confusion_matrix, xtick_labels=None, ytick_labels=None, title=None, fontsize=10):
+    fig, ax = plt.subplots()
+
+    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=np.max(confusion_matrix)))
+    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=np.max(confusion_matrix)))
+    im = ax.imshow(confusion_matrix, cmap='jet')
+
+    divider1 = make_axes_locatable(ax)
+    cax = divider1.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
+
+    ax.set_xticks(np.arange(confusion_matrix.shape[0]))
+    ax.set_yticks(np.arange(confusion_matrix.shape[1]))
+
+    if xtick_labels:
+        ax.set_xticklabels(xtick_labels, fontsize=fontsize)
+    if ytick_labels:
+        ax.set_yticklabels(ytick_labels, fontsize=fontsize)
+
+    ax.set_xlabel("predictions", fontsize=fontsize)
+    ax.set_ylabel("labels", fontsize=fontsize)
+
+    plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
+    for i in range(3):
+        for j in range(3):
+            text = ax.text(j, i, confusion_matrix[i, j], ha="center", va="center", color='w', fontsize=fontsize)
+    if title:
+        ax.set_title(title, fontsize=fontsize + 4)
+
+    plt.savefig(f"./cms/{title}.png")
+    # plt.show()
+
+
+def LSTM_confusion_matrix_per_day(model):
+    _, _, X_test, y_test = prepare_grouped_data(scale=True)
+    confusion_matrix = np.zeros((7, 3, 3))
+    day = 0
+    for x, y in zip(X_test, y_test):
+        day = (day + 1) % 7
+        _, predictions = torch.max(model(x), 1)
+        for pred, label in zip(predictions, y):
+            confusion_matrix[day][label][pred] += 1
+
+    for day in range(7):
+        for label in range(3):
+            confusion_matrix[day][label] = np.round(
+                confusion_matrix[day][label] / np.sum(confusion_matrix[day][label]), 3)
+
+    for day in range(7):
+        draw_confusion_matrix(confusion_matrix[day], xtick_labels=['low', 'medium', 'high'],
+                              ytick_labels=['low', 'medium', 'high'], title=f'LSTM confusion matrix for day {day + 1}')
+
+
+def LSTM_confusion_matrix_per_month(model):
+    _, _, X_test, y_test = prepare_grouped_data(scale=True)
+
+    month_dict = create_month_dict(X_test)
+
+    confusion_matrix = np.zeros((12, 3, 3))
+    for x, y in zip(X_test, y_test):
+        month = month_dict[x[0, -2]]
+        _, predictions = torch.max(model(x), 1)
+        for pred, label in zip(predictions, y):
+            confusion_matrix[month][label][pred] += 1
+
+    for month in range(12):
+        for label in range(3):
+            confusion_matrix[month][label] = np.round(
+                confusion_matrix[month][label] / np.sum(confusion_matrix[month][label]), 3)
+
+    for month in range(12):
+        draw_confusion_matrix(confusion_matrix[month], xtick_labels=['low', 'medium', 'high'],
+                              ytick_labels=['low', 'medium', 'high'],
+                              title=f'LSTM confusion matrix for month {month + 1}')
+
+
+if __name__ == '__main__':
+    # model = train_model(verbose=True)
+    # save_model(model, 'lstm_model')
+    model = load_model('lstm_model')
+    # LSTM_confusion_matrix_per_month(model)
+    # LSTM_confusion_matrix_per_day(model)
+    CM_LSTM_per_hour(model)
