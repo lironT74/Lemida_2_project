@@ -51,14 +51,13 @@ def prepare_categorized_dataset():
         if len(df[col].unique()) > 24:
             lower_barrier = df[col].quantile(q=1 / 3)
             higher_barrier = df[col].quantile(q=2 / 3)
-            df[f'{col}_categorized'] = df[col].\
+            df[f'{col}_categorized'] = df[col]. \
                 apply(lambda x: 'low' if x < lower_barrier else 'medium' if x < higher_barrier else 'high')
             df.drop(col, axis=1, inplace=True)
     return df
 
 
 def prepare_train_test(categorized=False, scale=True, **kwargs):
-
     seed = kwargs.get("seed", 57)
 
     df = prepare_categorized_dataset() if categorized else prepare_dataset()
@@ -97,7 +96,6 @@ def prepare_grouped_data(categorized=False, scale=True):
                                              test_size=test_size,
                                              random_state=57)
 
-
     train_x, train_y = get_x_any_y(df, train_days, Y_COLUMN)
     test_x, test_y = get_x_any_y(df, test_days, Y_COLUMN)
 
@@ -123,7 +121,6 @@ def divide_data_to_two_years(categorized=False, scale=True):
     train_x, train_y = get_x_any_y_years(df, train_years, Y_COLUMN)
     test_x, test_y = get_x_any_y_years(df, test_years, Y_COLUMN)
 
-
     if scale:
         train_set = df[df['year'].isin(train_years)]
         train_set_x = train_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
@@ -137,7 +134,6 @@ def divide_data_to_two_years(categorized=False, scale=True):
         return np.array(scaled_train_x), np.array(train_y), np.array(scaled_test_x), np.array(test_y)
 
     return np.array(train_x), np.array(train_y), np.array(test_x), np.array(test_y)
-
 
 
 if __name__ == '__main__':
