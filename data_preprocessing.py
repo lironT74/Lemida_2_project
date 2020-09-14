@@ -3,7 +3,7 @@ from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from auxiliary_functions import get_x_any_y
+from auxiliary_functions import get_x_any_y, get_x_any_y_advanced
 
 X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'hour', 'month',
              'day']
@@ -39,7 +39,6 @@ def prepare_dataset():
 
     df.drop(['timestamp', 'cnt'], axis=1, inplace=True)
     return df
-
 
 def prepare_categorized_dataset():
     df = prepare_dataset()
@@ -83,7 +82,7 @@ def prepare_train_test(categorized=False, scale=True):
     return test_x, test_y, train_x, train_y
 
 
-def prepare_grouped_data(categorized=False, scale=True):
+def prepare_grouped_data(categorized=False, scale=True, advanced=False):
     df = prepare_categorized_dataset() if categorized else prepare_dataset()
     dates_in_data = df['date'].unique()
     test_size = 0.25
@@ -106,5 +105,58 @@ def prepare_grouped_data(categorized=False, scale=True):
     return train_x, train_y, test_x, test_y
 
 
+def prepare_dataset_advanced():
+    # TODO consider using the function pd.set_index to set the column date as the index of the df
+    df = pd.read_csv(r'london_merged.csv')
+    df["cnt_categories"] = df["cnt"].apply(lambda x: 0 if x < 450 else (1 if x < 1400 else 2))
+    df["hour"] = df["timestamp"].apply(lambda x: int(x[11:13]))
+
+    df['timestamp'] = pd.to_datetime(df['timestamp']).dt.date
+    df["date"] = df['timestamp'].apply(lambda x: int(x.strftime('%d%m%Y')))
+    df["month"] = df['timestamp'].apply(lambda x: int(x.strftime('%m')))
+    df["day"] = df['timestamp'].apply(lambda x: int(x.strftime('%d')))
+    df['year_week'] = df['timestamp'].apply(lambda x: str(x.isocalendar()[0])+'_'+str(x.isocalendar()[1]))
+    df['week_day'] = df['timestamp'].apply(lambda x: int(x.isocalendar()[2]))
+
+    df.drop(['timestamp', 'cnt', 'date'], axis=1, inplace=True)
+    return df
+
+
+def prepare_grouped_data_advanced(scale=True):
+    df = prepare_dataset_advanced()
+    dates_in_data = df['year_week'].unique()
+    test_size = 0.25
+    train_weeks, test_weeks = train_test_split(dates_in_data,
+                                             test_size=test_size,
+                                             random_state=57)
+    train_x, train_y = get_x_any_y_advanced(df, train_weeks, Y_COLUMN)
+    test_x, test_y = get_x_any_y_advanced(df, test_weeks, Y_COLUMN)
+
+    # if scale:
+    #     train_set = df[df['year_week'].isin(train_weeks)]
+    #     train_set_x = train_set.drop([Y_COLUMN, 'year_week'], axis=1)
+    #     scalar = StandardScaler()
+    #     scalar.fit(train_set_x)
+    #
+    #     scaled_train_x = [scalar.transform(day) for day in train_x]
+    #     scaled_test_x = [scalar.transform(day) for day in test_x]
+    #     return scaled_train_x, train_y, scaled_test_x, test_y
+
+    return train_x, train_y, test_x, test_y
+
 if __name__ == '__main__':
     pass
+    train_x, train_y, test_x, test_y = prepare_grouped_data_advanced(scale=True) # (seq_len, week, 4_hours, vector_dim) , (seq_len, dim)
+    # # train_x = np.array(train_x)
+    # # train_y = np.array(train_y)
+    # print(train_y)
+    # print(train_x[0].reshape(7, 48).shape)
+    #
+    # counter = 0
+    # max = 0
+    # for x in train_x:
+    #     for day in x:
+    #         counter += 1 if len(day) < 4 else 0
+    #         max = max if max > len(day) else len(day)
+    # print(counter)
+    # print(max)

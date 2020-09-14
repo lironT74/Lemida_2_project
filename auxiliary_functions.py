@@ -8,12 +8,76 @@ CONTAINS_UPPER = '*CU'
 CONTAINS_HYPHEN = '*CH'
 
 
+def make_matrix():
+    matrix = np.zeros((3, 3, 3, 3))
+    index_to_value = []
+    counter = 0
+    for i in range(3):
+        for j in range(3):
+            for k in range(3):
+                for l in range(3):
+                    matrix[i, j, k, l] = counter
+                    index_to_value.append(np.array([i, j, k, l]))
+                    counter += 1
+    return matrix, index_to_value
+
+
+
 def get_x_any_y(df, dates, y_column):
     x, y = [], []
     for date in dates:
         day_df = df[df['date'] == date]
         x.append(day_df.drop([y_column, 'date'], axis=1).to_numpy())
         y.append(day_df[y_column].to_numpy())
+    return x, y
+
+
+
+def get_x_any_y_advanced(df, weeks, y_column):
+    y_matrix, _ = make_matrix()
+    x, y = [], []
+    for i, week in enumerate(weeks):
+        # if i % 5 == 0:
+        #     print(i)
+        x_week_0, x_week_1, x_week_2, x_week_3, x_week_4, x_week_5 = [], [], [], [], [], []
+        y_week_0, y_week_1, y_week_2, y_week_3, y_week_4, y_week_5 = [], [], [], [], [], []
+        week_df = df[df['year_week'] == week]
+        for week_day in sorted(week_df['week_day'].unique()):
+            x_day_array = week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).to_numpy()
+            y_day_array = week_df[week_df['week_day'] == week_day][y_column].to_numpy()
+            if len(x_day_array) != 24:
+                continue
+            x_week_0.append(x_day_array[0:4])
+            y_week_0.append(y_matrix[tuple(y_day_array[:4])])
+            x_week_1.append(x_day_array[4:8])
+            y_week_1.append(y_matrix[tuple(y_day_array[4:8])])
+
+            x_week_2.append(x_day_array[8:12])
+            y_week_2.append(y_matrix[tuple(y_day_array[8:12])])
+
+            x_week_3.append(x_day_array[12:16])
+            y_week_3.append(y_matrix[tuple(y_day_array[12:16])])
+
+            x_week_4.append(x_day_array[16:20])
+            y_week_4.append(y_matrix[tuple(y_day_array[16:20])])
+
+            x_week_5.append(x_day_array[20:])
+            y_week_5.append(y_matrix[tuple(y_day_array[20:])])
+
+        x.append(np.array(x_week_0))
+        x.append(np.array(x_week_1))
+        x.append(np.array(x_week_2))
+        x.append(np.array(x_week_3))
+        x.append(np.array(x_week_4))
+        x.append(np.array(x_week_5))
+
+        y.append(np.array(y_week_0))
+        y.append(np.array(y_week_1))
+        y.append(np.array(y_week_2))
+        y.append(np.array(y_week_3))
+        y.append(np.array(y_week_4))
+        y.append(np.array(y_week_5))
+
     return x, y
 
 
