@@ -3,8 +3,8 @@ from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from auxiliary_functions import get_x_any_y, get_x_any_y_advanced
-from auxiliary_functions import get_x_any_y, get_x_any_y_years
+from auxiliary_functions import get_x_any_y_advanced
+from auxiliary_functions import get_x_any_y, get_x_any_y_years, get_x_any_y_by_hours
 
 X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_weekend', 'season', 'year', 'month',
              'day', 'hour']
@@ -128,8 +128,7 @@ def prepare_dataset_advanced():
     df.drop(['timestamp', 'cnt', 'date'], axis=1, inplace=True)
     return df
 
-
-def prepare_grouped_data_advanced(scale=True):
+def prepare_grouped_data_creative(scale=False):
     df = prepare_dataset_advanced()
     dates_in_data = df['year_week'].unique()
     test_size = 0.25
@@ -138,6 +137,54 @@ def prepare_grouped_data_advanced(scale=True):
                                              random_state=57)
     train_x, train_y = get_x_any_y_advanced(df, train_weeks, Y_COLUMN)
     test_x, test_y = get_x_any_y_advanced(df, test_weeks, Y_COLUMN)
+
+    # if scale:
+    #     train_set = df[df['year_week'].isin(train_weeks)]
+    #     train_set_x = train_set.drop([Y_COLUMN, 'year_week'], axis=1)
+    #     scalar = StandardScaler()
+    #     scalar.fit(train_set_x)
+    #
+    #     scaled_train_x = [scalar.transform(day) for day in train_x]
+    #     scaled_test_x = [scalar.transform(day) for day in test_x]
+    #     return scaled_train_x, train_y, scaled_test_x, test_y
+
+    return train_x, train_y, test_x, test_y
+
+def prepare_grouped_data_advanced(scale=True, creative=False, num_of_hours=None):
+    df = prepare_dataset_advanced()
+    dates_in_data = df['year_week'].unique()
+    test_size = 0.25
+    train_weeks, test_weeks = train_test_split(dates_in_data,
+                                             test_size=test_size,
+                                             random_state=57)
+    if not creative:
+        train_x, train_y = get_x_any_y_advanced(df, train_weeks, Y_COLUMN)
+        test_x, test_y = get_x_any_y_advanced(df, test_weeks, Y_COLUMN)
+    else:
+        train_x, train_y = get_x_any_y_by_hours(df, train_weeks, Y_COLUMN, num_of_hours)
+        test_x, test_y = get_x_any_y_by_hours(df, test_weeks, Y_COLUMN, num_of_hours)
+
+    # if scale:
+    #     train_set = df[df['year_week'].isin(train_weeks)]
+    #     train_set_x = train_set.drop([Y_COLUMN, 'year_week'], axis=1)
+    #     scalar = StandardScaler()
+    #     scalar.fit(train_set_x)
+    #
+    #     scaled_train_x = [scalar.transform(day) for day in train_x]
+    #     scaled_test_x = [scalar.transform(day) for day in test_x]
+    #     return scaled_train_x, train_y, scaled_test_x, test_y
+
+    return train_x, train_y, test_x, test_y
+
+# def prepare_grouped_data_creative(num_of_hours,scale=False):
+#     df = prepare_dataset_advanced(num_of_hours=num_of_hours)
+#     dates_in_data = df['year_week'].unique()
+#     test_size = 0.25
+#     train_weeks, test_weeks = train_test_split(dates_in_data,
+#                                              test_size=test_size,
+#                                              random_state=57)
+#     train_x, train_y = get_x_any_y_advanced(df, train_weeks, Y_COLUMN)
+#     test_x, test_y = get_x_any_y_advanced(df, test_weeks, Y_COLUMN)
 
     # if scale:
     #     train_set = df[df['year_week'].isin(train_weeks)]
@@ -177,11 +224,11 @@ def divide_data_to_two_years(categorized=False, scale=True):
 
 if __name__ == '__main__':
     pass
-    train_x, train_y, test_x, test_y = prepare_grouped_data_advanced(scale=True) # (seq_len, week, 4_hours, vector_dim) , (seq_len, dim)
+    train_x, train_y, test_x, test_y = prepare_grouped_data_advanced(creative=True, num_of_hours=6) # (seq_len, week, 4_hours, vector_dim) , (seq_len, dim)
     # # train_x = np.array(train_x)
     # # train_y = np.array(train_y)
     # print(train_y)
-    # print(train_x[0].reshape(7, 48).shape)
+    print(train_x[0].shape)
     #
     # counter = 0
     # max = 0

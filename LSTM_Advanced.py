@@ -15,7 +15,7 @@ class LSTM_Advanced(nn.Module):
         self.vec_emb_dim = vector_emb_dim
         self.lstm = nn.LSTM(input_size=vector_emb_dim, hidden_size=hidden_dim,
                             num_layers=2, bidirectional=True, batch_first=False)
-        self.MLP = nn.linear(vector_emb_dim, vector_emb_dim)
+        self.MLP = nn.Linear(vector_emb_dim, vector_emb_dim)
         self.hidden_to_count = nn.Linear(hidden_dim * 2, num_classes)
 
     def forward(self, hours_array, get_hidden_layer=False):
@@ -55,6 +55,7 @@ def evaluate(X_test, y_test, model, index_to_value):
 
 if __name__ == '__main__':
     X_train, y_train, X_test, y_test = prepare_grouped_data_advanced(scale=False)
+
     _, index_to_value = make_matrix()
     print(X_train[0].shape)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

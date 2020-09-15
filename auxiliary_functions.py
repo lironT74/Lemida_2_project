@@ -40,53 +40,51 @@ def get_x_any_y_years(df, years, y_column):
         y.append(years_df[y_column].to_numpy())
     return x, y
 
-
-
-def get_x_any_y_advanced(df, weeks, y_column):
-    y_matrix, _ = make_matrix()
+def get_x_any_y_by_hours(df, weeks, y_column, num_of_hours):
+    matrix = np.arange(3 ** num_of_hours).reshape(tuple([3]*num_of_hours))
+    assert 24 % num_of_hours == 0
+    k = num_of_hours
     x, y = [], []
     for i, week in enumerate(weeks):
-        # if i % 5 == 0:
-        #     print(i)
-        x_week_0, x_week_1, x_week_2, x_week_3, x_week_4, x_week_5 = [], [], [], [], [], []
-        y_week_0, y_week_1, y_week_2, y_week_3, y_week_4, y_week_5 = [], [], [], [], [], []
+        x_week = {}
+        y_week = {}
+        for i in range(24 // num_of_hours):
+            x_week[i] = []
+            y_week[i] = []
         week_df = df[df['year_week'] == week]
         for week_day in sorted(week_df['week_day'].unique()):
             x_day_array = week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).to_numpy()
             y_day_array = week_df[week_df['week_day'] == week_day][y_column].to_numpy()
             if len(x_day_array) != 24:
                 continue
-            x_week_0.append(x_day_array[0:4])
-            y_week_0.append(y_matrix[tuple(y_day_array[:4])])
-            x_week_1.append(x_day_array[4:8])
-            y_week_1.append(y_matrix[tuple(y_day_array[4:8])])
+            for i in range(24 // num_of_hours):
+                # print(i)
+                x_week[i].append(x_day_array[k * i:k * (i + 1)])
+                y_week[i].append(matrix[tuple(y_day_array[k*i:k*(i+1)])])
 
-            x_week_2.append(x_day_array[8:12])
-            y_week_2.append(y_matrix[tuple(y_day_array[8:12])])
+        x.append(np.array([x_week[i] for i in range(24 // num_of_hours)]))
+        y.append(np.array([y_week[i] for i in range(24 // num_of_hours)]))
+    return x, y
 
-            x_week_3.append(x_day_array[12:16])
-            y_week_3.append(y_matrix[tuple(y_day_array[12:16])])
+def get_x_any_y_advanced(df, weeks, y_column):
+    y_matrix, _ = make_matrix()
+    x, y = [], []
+    for i, week in enumerate(weeks):
+        x_week = {0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
+        y_week = {0: [], 1: [], 2: [], 3: [], 4: [], 5: []}
+        week_df = df[df['year_week'] == week]
+        for week_day in sorted(week_df['week_day'].unique()):
+            x_day_array = week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).to_numpy()
+            y_day_array = week_df[week_df['week_day'] == week_day][y_column].to_numpy()
+            if len(x_day_array) != 24:
+                continue
+            for i in range(6):
+                x_week[i].append(x_day_array[4*i:4*(i+1)])
+                y_week[i].append(y_matrix[tuple(y_day_array[4*i:4*(i+1)])])
 
-            x_week_4.append(x_day_array[16:20])
-            y_week_4.append(y_matrix[tuple(y_day_array[16:20])])
-
-            x_week_5.append(x_day_array[20:])
-            y_week_5.append(y_matrix[tuple(y_day_array[20:])])
-
-        x.append(np.array(x_week_0))
-        x.append(np.array(x_week_1))
-        x.append(np.array(x_week_2))
-        x.append(np.array(x_week_3))
-        x.append(np.array(x_week_4))
-        x.append(np.array(x_week_5))
-
-        y.append(np.array(y_week_0))
-        y.append(np.array(y_week_1))
-        y.append(np.array(y_week_2))
-        y.append(np.array(y_week_3))
-        y.append(np.array(y_week_4))
-        y.append(np.array(y_week_5))
-
+        for i in range(6):
+            x.append(np.array(x_week[i]))
+            y.append(np.array(y_week[i]))
     return x, y
 
 
