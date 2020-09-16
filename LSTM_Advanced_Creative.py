@@ -123,6 +123,9 @@ def train_model_advanced(num_of_hours = 4, EPOCHS = 40, HIDDEN_DIM = 100):
     accuracy_list = []
     loss_list = []
     epochs = EPOCHS
+    max_test_acc = 0
+
+
     for epoch in range(epochs):
         acc = 0
         printable_loss = 0
@@ -164,6 +167,9 @@ def train_model_advanced(num_of_hours = 4, EPOCHS = 40, HIDDEN_DIM = 100):
         accuracy_list.append(float(acc))
 
         test_acc = evaluate_advanced(X_test, y_test, model, num_of_hours)
+
+        if test_acc > max_test_acc:
+            max_test_acc = test_acc
         e_interval = i
         print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
               .format(epoch + 1,
@@ -171,6 +177,7 @@ def train_model_advanced(num_of_hours = 4, EPOCHS = 40, HIDDEN_DIM = 100):
                       np.mean(accuracy_list[-e_interval:]),
                       test_acc))
 
+        return max_test_acc
 
 def train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_hours, EPOCHS=10, HIDDEN_DIM=100):
 
@@ -255,14 +262,20 @@ def train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_h
 
 if __name__ == '__main__':
 
-    EPOCHS = 3
+    EPOCHS = 50
 
     print(f"\n\n\n\nAdvanced Model: ")
+
+    Advanced_acc = {}
 
     for num_of_hours in range(1, 13):
         if 24 % num_of_hours == 0:
             print(f"\nAdvanced Model with {num_of_hours} hours in block: \n")
-            train_model_advanced(num_of_hours=num_of_hours, EPOCHS=EPOCHS)
+            Advanced_acc[num_of_hours] = train_model_advanced(num_of_hours=num_of_hours, EPOCHS=EPOCHS)
+
+    print(f"\n\nHighest acc among epochs of Advanced models: ")
+    for num_of_hourss, acc in Advanced_acc.items():
+        print(f' model {num_of_hourss} hours in block: {acc}')
 
 
     print(f"\n\n\n\nCreative Model: ")
@@ -278,17 +291,18 @@ if __name__ == '__main__':
             best_test_accs = []
 
             for block_index in range(24 // num_of_hours):
-                print(f"Model of hours: {block_index * num_of_hours}:{(block_index + 1) * num_of_hours}")
+                print(f"\nModel of hours: {block_index * num_of_hours}:{(block_index + 1) * num_of_hours}")
                 best_test_accs.append(train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_hours=num_of_hours, EPOCHS=EPOCHS))
 
+            print()
             for i, acc in enumerate(best_test_accs):
                 print(f'Hours: {i * num_of_hours}:{(i + 1) * num_of_hours} max test acc among epochs: {acc}')
 
-            print(f'Average acc of max acc among epochs: {np.average(best_test_accs)}')
+            print(f'\nAverage acc of max acc among epochs: {np.average(best_test_accs)}')
             Creative_acc[num_of_hours] = np.average(best_test_accs)
 
 
-    print(f"Average highest acc among epochs of creative models: ")
+    print(f"\n\nAverage highest acc among epochs of creative models: ")
     for num_of_hourss, acc in Creative_acc.items():
         print(f' model {num_of_hourss} hours in block: {acc}')
 
