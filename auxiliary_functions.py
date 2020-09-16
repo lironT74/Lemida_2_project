@@ -1,5 +1,8 @@
+import numpy
 import numpy as np
 import scipy.sparse as sp
+from matplotlib import pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 BEGIN = '*B'
 STOP = '*S'
@@ -266,3 +269,39 @@ def create_month_dict(data):
             months.append(month)
     month_dict = {val: i for i, val in enumerate(sorted(months))}
     return month_dict
+
+
+def draw_confusion_matrix(confusion_matrix, xtick_labels=None, ytick_labels=None, title=None, fontsize=10, save=False,
+                          show=True):
+    fig, ax = plt.subplots()
+
+    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=np.max(confusion_matrix)))
+    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=np.max(confusion_matrix)))
+    im = ax.imshow(confusion_matrix, cmap='jet')
+
+    divider1 = make_axes_locatable(ax)
+    cax = divider1.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
+
+    ax.set_xticks(np.arange(confusion_matrix.shape[0]))
+    ax.set_yticks(np.arange(confusion_matrix.shape[1]))
+
+    if xtick_labels:
+        ax.set_xticklabels(xtick_labels, fontsize=fontsize)
+    if ytick_labels:
+        ax.set_yticklabels(ytick_labels, fontsize=fontsize)
+
+    ax.set_xlabel("predictions", fontsize=fontsize)
+    ax.set_ylabel("labels", fontsize=fontsize)
+
+    plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
+    for i in range(3):
+        for j in range(3):
+            text = ax.text(j, i, confusion_matrix[i, j], ha="center", va="center", color='w', fontsize=fontsize)
+    if title:
+        ax.set_title(title, fontsize=fontsize + 4)
+
+    if save:
+        plt.savefig(f"./cms/{title}.png")
+    if show:
+        plt.show()

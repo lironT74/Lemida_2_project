@@ -7,7 +7,7 @@ from data_preprocessing import *
 import pickle
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from auxiliary_functions import create_month_dict
+from auxiliary_functions import create_month_dict, draw_confusion_matrix
 
 
 class LSTM_Tagger(nn.Module):
@@ -199,49 +199,6 @@ def load_model(model_fname):
     return model
 
 
-def CM_LSTM_per_hour(model):
-
-    _, _, X_test, y_test = prepare_grouped_data(scale=True)
-
-    confusion_matrix = np.zeros((24, 24), int)
-
-    for x, y in zip(X_test, y_test):
-        _, predictions = torch.max(model(x), 1)
-
-        for day, (pred, label) in enumerate(zip(predictions, y)):
-            confusion_matrix[day][day] += int(pred != label)
-
-    confusion_matrix = np.round(confusion_matrix / np.sum(confusion_matrix), 2)
-
-    fontsize = 32
-    fig, ax = plt.subplots(figsize=(20, 20))
-
-    max = np.max(confusion_matrix)
-
-    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
-    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
-
-    divider1 = make_axes_locatable(ax)
-    cax = divider1.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
-
-    ax.set_xticks(np.arange(24))
-    ax.set_yticks(np.arange(24))
-
-    ax.set_xticklabels(list(range(24)), fontsize=fontsize - 4)
-    ax.set_yticklabels(list(range(24)), fontsize=fontsize - 4)
-
-    # plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
-
-    for i in range(24):
-        text = ax.text(i, i, s=str(confusion_matrix[i][i]),
-                       ha="center", va="center", color='w', fontsize=fontsize - 9)
-    ax.set_title("LSTM predictions mistakes ratio counts on hours", fontsize=fontsize + 4)
-
-    plt.savefig(f"./cms/LSTM predictions mistakes ratio counts on hours.png")
-    # plt.show()
-
-
 def LSTM_CM(model):
     _, _, X_test, y_test = prepare_grouped_data(scale=True)
     confusion_matrix = np.zeros((3, 3))
@@ -255,39 +212,6 @@ def LSTM_CM(model):
 
     draw_confusion_matrix(confusion_matrix, xtick_labels=['low', 'medium', 'high'],
                           ytick_labels=['low', 'medium', 'high'], title='Confusion matrix for LSTM predictions')
-
-
-def draw_confusion_matrix(confusion_matrix, xtick_labels=None, ytick_labels=None, title=None, fontsize=10):
-    fig, ax = plt.subplots()
-
-    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=np.max(confusion_matrix)))
-    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=np.max(confusion_matrix)))
-    im = ax.imshow(confusion_matrix, cmap='jet')
-
-    divider1 = make_axes_locatable(ax)
-    cax = divider1.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
-
-    ax.set_xticks(np.arange(confusion_matrix.shape[0]))
-    ax.set_yticks(np.arange(confusion_matrix.shape[1]))
-
-    if xtick_labels:
-        ax.set_xticklabels(xtick_labels, fontsize=fontsize)
-    if ytick_labels:
-        ax.set_yticklabels(ytick_labels, fontsize=fontsize)
-
-    ax.set_xlabel("predictions", fontsize=fontsize)
-    ax.set_ylabel("labels", fontsize=fontsize)
-
-    plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
-    for i in range(3):
-        for j in range(3):
-            text = ax.text(j, i, confusion_matrix[i, j], ha="center", va="center", color='w', fontsize=fontsize)
-    if title:
-        ax.set_title(title, fontsize=fontsize + 4)
-
-    plt.savefig(f"./cms/{title}.png")
-    # plt.show()
 
 
 def LSTM_confusion_matrix_per_day(model):
@@ -335,7 +259,6 @@ def LSTM_confusion_matrix_per_month(model):
 
 def LSTM_error_rate_per_hour(model):
     _, _, X_test, y_test = prepare_grouped_data(scale=True)
-    n = len(X_test)
 
     errors = np.zeros(24)
     counts = np.zeros(24)
@@ -345,13 +268,56 @@ def LSTM_error_rate_per_hour(model):
             if predictions[i] != y[i]:
                 errors[i] += 1
             counts[i] += 1
-    error_rate = errors / np.sum(errors)
+    error_rate = errors / counts
 
     plt.bar(np.arange(1, 25), error_rate)
     plt.xticks(np.arange(1, 25))
-    # plt.yticks(np.arange(0, 1.01, 0.05))
+    plt.yticks(np.arange(0, max(error_rate), 0.01))
     plt.title('Error Rate per Hour')
     plt.show()
+
+
+def CM_LSTM_per_hour(model):
+
+    _, _, X_test, y_test = prepare_grouped_data(scale=True)
+
+    confusion_matrix = np.zeros((24, 24), int)
+
+    for x, y in zip(X_test, y_test):
+        _, predictions = torch.max(model(x), 1)
+
+        for day, (pred, label) in enumerate(zip(predictions, y)):
+            confusion_matrix[day][day] += int(pred != label)
+
+    confusion_matrix = np.round(confusion_matrix / np.sum(confusion_matrix), 2)
+
+    fontsize = 32
+    fig, ax = plt.subplots(figsize=(20, 20))
+
+    max = np.max(confusion_matrix)
+
+    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
+    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
+
+    divider1 = make_axes_locatable(ax)
+    cax = divider1.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
+
+    ax.set_xticks(np.arange(24))
+    ax.set_yticks(np.arange(24))
+
+    ax.set_xticklabels(list(range(24)), fontsize=fontsize - 4)
+    ax.set_yticklabels(list(range(24)), fontsize=fontsize - 4)
+
+    # plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
+
+    for i in range(24):
+        text = ax.text(i, i, s=str(confusion_matrix[i][i]),
+                       ha="center", va="center", color='w', fontsize=fontsize - 9)
+    ax.set_title("LSTM predictions mistakes ratio counts on hours", fontsize=fontsize + 4)
+
+    plt.savefig(f"./cms/LSTM predictions mistakes ratio counts on hours.png")
+    # plt.show()
 
 
 if __name__ == '__main__':
