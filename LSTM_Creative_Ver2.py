@@ -7,6 +7,7 @@ from data_preprocessing import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 class LSTM_Creative(nn.Module):
     def __init__(self, vector_emb_dim, hidden_dim, num_classes):
         # self.num_of_models = int(24 / num_of_hours)
@@ -32,6 +33,7 @@ class LSTM_Creative(nn.Module):
 
         return count_type_scores
 
+
 def evaluate(X_test, y_test, model, num_of_hours, INDEX_OF_MODEL):
     acc = 0
     overall = 0
@@ -51,6 +53,7 @@ def evaluate(X_test, y_test, model, num_of_hours, INDEX_OF_MODEL):
         # TODO change this if window size is not fixed
     return acc
 
+
 def index_to_value(x, num_of_hours):
     values = []
     while x > 0:
@@ -60,6 +63,7 @@ def index_to_value(x, num_of_hours):
         values.append(0)
     values.reverse()
     return np.array(values)
+
 
 def fit_models(num_of_hours):
 
@@ -131,19 +135,24 @@ def fit_models(num_of_hours):
             acc = acc / overall
             loss_list.append(float(printable_loss))
             accuracy_list.append(float(acc))
+
             test_acc = evaluate(X_test, y_test, model, num_of_hours, INDEX_OF_MODEL)
             if test_acc > best_test_accs[-1]:
                 best_test_accs[-1] = test_acc
+
             e_interval = i
             # print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
             #       .format(epoch + 1,
             #               np.mean(loss_list[-e_interval:]),
             #               np.mean(accuracy_list[-e_interval:]),
             #               test_acc))
+
+
     print('finished')
     print(f'Total accuracy is {sum(best_test_accs) / len(best_test_accs)}')
     for i, acc in enumerate(best_test_accs):
         print(f'Hours: {i*num_of_hours}:{(i+1)*num_of_hours} and acc {acc}')
+
 
 if __name__ == '__main__':
     for i in range(1, 25):

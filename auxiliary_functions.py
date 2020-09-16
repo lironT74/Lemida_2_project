@@ -9,19 +9,19 @@ CONTAINS_UPPER = '*CU'
 CONTAINS_HYPHEN = '*CH'
 
 
-def make_matrix():
-    matrix = np.zeros((3, 3, 3, 3))
-    index_to_value = []
-    counter = 0
-    for i in range(3):
-        for j in range(3):
-            for k in range(3):
-                for l in range(3):
-                    matrix[i, j, k, l] = counter
-                    index_to_value.append(np.array([i, j, k, l]))
-                    counter += 1
-    return matrix, index_to_value
-
+# def make_matrix():
+#     matrix = np.zeros((3, 3, 3, 3))
+#     index_to_value = []
+#     counter = 0
+#     for i in range(3):
+#         for j in range(3):
+#             for k in range(3):
+#                 for l in range(3):
+#                     matrix[i, j, k, l] = counter
+#                     index_to_value.append(np.array([i, j, k, l]))
+#                     counter += 1
+#     return matrix, index_to_value
+#
 
 
 def get_x_any_y(df, dates, y_column):
@@ -41,72 +41,43 @@ def get_x_any_y_years(df, years, y_column):
         y.append(years_df[y_column].to_numpy())
     return x, y
 
-def get_x_any_y_by_hours(df, weeks, y_column, num_of_hours):
-
-    matrix = np.arange(3 ** num_of_hours).reshape(tuple([3]*num_of_hours))
 
 
-    assert 24 % num_of_hours == 0
-    k = num_of_hours
-    x, y = [], []
 
-    counter = 0
-    for week_num, week in enumerate(weeks):
-        x_week = {}
-        y_week = {}
+def index_to_value(x, num_of_hours):
 
-        for block_index in range(24 // num_of_hours):
-            x_week[block_index] = []
-            y_week[block_index] = []
+    values = []
 
-        week_df = df[df['year_week'] == week]
+    while x > 0:
+        values.append(x % 3)
+        x //= 3
 
-        for week_day in sorted(week_df['week_day'].unique()):
+    while len(values) < num_of_hours:
+        values.append(0)
 
-            x_day_array = week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).to_numpy()
-            y_day_array = week_df[week_df['week_day'] == week_day][y_column].to_numpy()
+    values.reverse()
 
-            hour_index = list(week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).columns).index('hour')
-
-            # No missing hours:
-            if len(x_day_array) == 24:
-                for block_index in range(24 // k):
-                    x_week[block_index].append(x_day_array[k * block_index:k * (block_index + 1)])
-                    y_week[block_index].append(matrix[tuple(y_day_array[k*block_index:k*(block_index+1)])])
-
-            # missing hours. should discard windows with missing hours.
-            else:
-                counter+=1
-                missing_hours = [hour for hour in range(24) if hour not in x_day_array[:, hour_index]]
-                missing_blocks = set()
-
-                for block_index in range(24 // k):
-                    for block_hour in range(k * block_index, k * (block_index + 1), 1):
-                        if block_hour in missing_hours:
-                            missing_blocks.add(block_index)
+    return np.array(values)
 
 
-                for block_index in range(24 // k):
-                    if block_index not in missing_blocks:
-                        x_week[block_index].append(x_day_array[k * block_index:k * (block_index + 1)])
-                        y_week[block_index].append(matrix[tuple(y_day_array[k * block_index:k * (block_index + 1)])])
+def value_to_index(lst):
 
-        x.append([x_week[block_index] for block_index in range(24 // k)])
-        y.append([y_week[block_index] for block_index in range(24 // k)])
+    res = 0
+    for index, value in enumerate(reversed(lst)):
+        res += value * 3 ** index
+
+    return res
 
 
-    return x, y
+def get_x_any_y_advanced_creative(df, weeks, y_column, k):
 
-def get_x_any_y_advanced(df, weeks, y_column, num_of_hours=4):
 
-    # y_matrix, _ = make_matrix()
+    # y_matrix = np.arange(3 ** k).reshape(tuple([3]*k))
 
-    y_matrix = np.arange(3 ** num_of_hours).reshape(tuple([3]*num_of_hours))
 
     x, y = {}, {}
 
-    assert 24 % num_of_hours == 0
-    k = num_of_hours
+    assert 24 % k == 0
 
     for week_index, week in enumerate(weeks):
 
@@ -120,6 +91,8 @@ def get_x_any_y_advanced(df, weeks, y_column, num_of_hours=4):
         for week_day in sorted(week_df['week_day'].unique()):
 
             x_day_array = week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).to_numpy()
+
+            # print([week_df[week_df['week_day'] == week_day][y_column].iloc[0] for i in range(len(week_df[week_df['week_day'] == week_day].index))])
 
             y_hours_labels = {week_df[week_df['week_day'] == week_day]['hour'].iloc[i]: week_df[week_df['week_day'] == week_day][y_column].iloc[0] for i in range(len(week_df[week_df['week_day'] == week_day].index))}
             x_hours_vectors = {week_df[week_df['week_day'] == week_day]['hour'].iloc[i]: week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).iloc[0].to_numpy() for i in range(len(week_df[week_df['week_day'] == week_day].index))}
@@ -135,7 +108,7 @@ def get_x_any_y_advanced(df, weeks, y_column, num_of_hours=4):
                     hours_vectors = [x_hours_vectors[hour] for hour in range(k * block_index, k * (block_index + 1), 1)]
                     x_week[block_index].append(list(itertools.chain(*hours_vectors)))
 
-                    y_week[block_index].append(y_matrix[tuple(y_hours_labels[hour] for hour in range(k * block_index, k * (block_index + 1), 1))])
+                    y_week[block_index].append(value_to_index([y_hours_labels[hour] for hour in range(k * block_index, k * (block_index + 1), 1)]))
 
             # missing hours. should discard windows with missing hours.
             else:
@@ -153,8 +126,8 @@ def get_x_any_y_advanced(df, weeks, y_column, num_of_hours=4):
                         hours_vectors = [x_hours_vectors[hour] for hour in range(k * block_index, k * (block_index + 1), 1)]
                         x_week[block_index].append(list(itertools.chain(*hours_vectors)))
 
-                        y_week[block_index].append(y_matrix[tuple(
-                            y_hours_labels[hour] for hour in range(k * block_index, k * (block_index + 1), 1))])
+                        y_week[block_index].append(value_to_index([
+                            y_hours_labels[hour] for hour in range(k * block_index, k * (block_index + 1), 1)]))
 
 
         for block_index in range(24 // k):
