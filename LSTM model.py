@@ -124,6 +124,8 @@ def whole_year():
 
 
 def train_model(verbose=True):
+
+
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
 
     epochs = 40
@@ -366,11 +368,13 @@ def LSTM_error_rate_per_hour(model, mode="percentage"):
 if __name__ == '__main__':
     # model = train_model(verbose=True)
     # save_model(model, 'lstm_model')
-    model = load_model('lstm_model')
+    # model = load_model('lstm_model')
     # CM_LSTM_per_hour(model)
 
-    LSTM_error_rate_per_hour(model, mode="percentage")
+    # LSTM_error_rate_per_hour(model, mode="percentage")
 
     # LSTM_error_rate_per_hour(model, mode="rate")
 
+    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
 
+    print(len(X_train))

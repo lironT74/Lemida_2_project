@@ -18,7 +18,7 @@ class LSTM_Creative(nn.Module):
         self.hidden_to_count =nn.Linear(hidden_dim * 2, num_classes)
 
     def forward(self, hours_arrays, get_hidden_layer=False):
-        hours_tensor = torch.from_numpy(hours_arrays).float().to(self.device)
+        hours_tensor = torch.tensor(hours_arrays).float().to(self.device)
         lstm_out, _ = self.lstm(
             hours_tensor.view(hours_tensor.shape[0], 1, -1))  # [seq_length, batch_size, 2*hidden_dim]
 
@@ -38,7 +38,7 @@ def evaluate(X_test, y_test, model, num_of_hours, INDEX_OF_MODEL):
     with torch.no_grad():
         for day_index in np.random.permutation(len(X_test)):
             hours_array = X_test[day_index][INDEX_OF_MODEL]
-            counts_tensor = torch.from_numpy(y_test[day_index][INDEX_OF_MODEL]).to(device)
+            counts_tensor = torch.tensor(y_test[day_index][INDEX_OF_MODEL]).to(device)
             counts_scores = model(hours_array)
             _, indices = torch.max(counts_scores, 1)
             for true_index, predicted_index in zip(counts_tensor.to("cpu").numpy(), indices.to("cpu").numpy()):
@@ -69,12 +69,14 @@ def fit_models(num_of_hours):
     for index_of_model in range(24 // num_of_hours):
         best_test_accs.append(0)
         EPOCHS = 40
-        VECTOR_EMBEDDING_DIM = int(X_train[0].shape[-1] * X_train[0].shape[-2])
+
+        VECTOR_EMBEDDING_DIM = int(np.shape(X_train[0])[-1] * np.shape(X_train[0])[-2])
+
         HIDDEN_DIM = 100
         INDEX_OF_MODEL = index_of_model
         # print(INDEX_OF_MODEL)
 
-        model = LSTM_Creative(VECTOR_EMBEDDING_DIM, HIDDEN_DIM, num_classes=3 ** num_of_hours)
+        model = LSTM_Creative(VECTOR_EMBEDDING_DIM, HIDDEN_DIM, num_classes= 3 ** num_of_hours)
 
         use_cuda = torch.cuda.is_available()
         device = torch.device("cuda:0" if use_cuda else "cpu")
@@ -89,6 +91,7 @@ def fit_models(num_of_hours):
         # Training start
         # print('-----------------------')
         # print(f"Training of model {INDEX_OF_MODEL} Started")
+
         accuracy_list = []
         loss_list = []
         epochs = EPOCHS
@@ -97,14 +100,18 @@ def fit_models(num_of_hours):
             printable_loss = 0  # To keep track of the loss value
             i = 0
             overall = 0
-            for day_index in np.random.permutation(len(X_train)):
+            for week_index in np.random.permutation(len(X_train)):
                 i += 1
-                hours_array = X_train[day_index][INDEX_OF_MODEL]
-                counts_tensor = torch.from_numpy(y_train[day_index][INDEX_OF_MODEL]).long().to(device)
+                hours_array = X_train[week_index][INDEX_OF_MODEL]
+
+                print(y_train[week_index])
+                # counts_tensor = torch.tensor(y_train[week_index][INDEX_OF_MODEL]).to(device)
+
 
                 counts_scores = model(hours_array)
 
                 loss = loss_function(counts_scores, counts_tensor)
+
                 loss /= accumulate_grad_steps * (24 // num_of_hours)
                 loss.backward()
                 printable_loss += loss.item()
@@ -139,8 +146,7 @@ def fit_models(num_of_hours):
         print(f'Hours: {i*num_of_hours}:{(i+1)*num_of_hours} and acc {acc}')
 
 if __name__ == '__main__':
-    for i in range(3, 25):
+    for i in range(1, 25):
         if 24 % i == 0:
             print(f'Training of model {i} started')
             fit_models(num_of_hours=i)
-
