@@ -257,14 +257,15 @@ if __name__ == '__main__':
 
     EPOCHS = 5
 
+    print(f"\n\n\n\n Advanced Model: ")
 
     for num_of_hours in range(1, 13):
         if 24 % num_of_hours == 0:
-            print(f"Advanced Model with num_of_hours = {num_of_hours}: ")
+            print(f"\nAdvanced Model with num_of_hours = {num_of_hours}: \n")
             train_model_advanced(num_of_hours=num_of_hours, EPOCHS=EPOCHS)
 
 
-    print(f"\nCreative Model: ")
+    print(f"\n\n\n\n Creative Model: ")
 
     for num_of_hours in range(1, 13):
 
