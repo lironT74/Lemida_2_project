@@ -244,32 +244,31 @@ def train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_h
             max_test_acc = test_acc
 
         e_interval = i
-        # print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
-        #       .format(epoch + 1,
-        #               np.mean(loss_list[-e_interval:]),
-        #               np.mean(accuracy_list[-e_interval:]),
-        #               test_acc))
+        print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
+              .format(epoch + 1,
+                      np.mean(loss_list[-e_interval:]),
+                      np.mean(accuracy_list[-e_interval:]),
+                      test_acc))
 
     return max_test_acc
 
 
 if __name__ == '__main__':
 
-    EPOCHS = 50
+    EPOCHS = 5
+
 
     for num_of_hours in range(1, 13):
         print(f"Advanced Model with num_of_hours = {num_of_hours}: ")
         train_model_advanced(num_of_hours=num_of_hours, EPOCHS=EPOCHS)
 
 
-
-    print(f"Creative Model: ")
-
+    print(f"\nCreative Model: ")
 
     for num_of_hours in range(1, 13):
 
         if 24 % num_of_hours == 0:
-            print(f'Training of model {num_of_hours} started')
+            print(f'\nTraining of model {num_of_hours} started')
 
             X_train, y_train, X_test, y_test = prepare_grouped_data_advanced(num_of_hours)
 
@@ -279,8 +278,9 @@ if __name__ == '__main__':
 
                 best_test_accs.append(train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_hours=num_of_hours, EPOCHS=EPOCHS))
 
-
             for i, acc in enumerate(best_test_accs):
-                print(f'Hours: {i * num_of_hours}:{(i + 1) * num_of_hours} and acc {acc}')
+                print(f'Hours: {i * num_of_hours}:{(i + 1) * num_of_hours} max test acc among epochs: {acc}')
+
+            print(f'Average acc of max acc among epochs: {np.average(best_test_accs)}')
 
 
