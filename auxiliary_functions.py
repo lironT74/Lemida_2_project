@@ -56,17 +56,21 @@ def get_x_any_y_by_hours(df, weeks, y_column, num_of_hours):
         week_df = df[df['year_week'] == week]
         for week_day in sorted(week_df['week_day'].unique()):
 
-            print( week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).columns)
             x_day_array = week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).to_numpy()
             y_day_array = week_df[week_df['week_day'] == week_day][y_column].to_numpy()
 
-            if len(x_day_array) != 24:
-                counter+=1
-                continue
+            # No missing hours:
+            if len(x_day_array) == 24:
+                for i in range(24 // num_of_hours):
+                    x_week[i].append(x_day_array[k * i:k * (i + 1)])
+                    y_week[i].append(matrix[tuple(y_day_array[k*i:k*(i+1)])])
 
-            for i in range(24 // num_of_hours):
-                x_week[i].append(x_day_array[k * i:k * (i + 1)])
-                y_week[i].append(matrix[tuple(y_day_array[k*i:k*(i+1)])])
+            # missing hours. should discard windows with missing hours.
+            else:
+                missing_hours = [hour for hour in range(24) if hour not in x_day_array[:, 8]]
+                print(missing_hours)
+
+
 
         x.append(np.array([x_week[i] for i in range(24 // num_of_hours)]))
         y.append(np.array([y_week[i] for i in range(24 // num_of_hours)]))
