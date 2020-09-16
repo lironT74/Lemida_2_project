@@ -177,7 +177,7 @@ def train_model_advanced(num_of_hours = 4, EPOCHS = 40, HIDDEN_DIM = 100):
                       np.mean(accuracy_list[-e_interval:]),
                       test_acc))
 
-        return max_test_acc
+    return max_test_acc
 
 def train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_hours, EPOCHS=10, HIDDEN_DIM=100):
 
