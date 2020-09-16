@@ -45,6 +45,8 @@ def get_x_any_y_by_hours(df, weeks, y_column, num_of_hours):
     assert 24 % num_of_hours == 0
     k = num_of_hours
     x, y = [], []
+
+    counter = 0
     for i, week in enumerate(weeks):
         x_week = {}
         y_week = {}
@@ -53,17 +55,23 @@ def get_x_any_y_by_hours(df, weeks, y_column, num_of_hours):
             y_week[i] = []
         week_df = df[df['year_week'] == week]
         for week_day in sorted(week_df['week_day'].unique()):
+
+            print( week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).columns)
             x_day_array = week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).to_numpy()
             y_day_array = week_df[week_df['week_day'] == week_day][y_column].to_numpy()
+
             if len(x_day_array) != 24:
+                counter+=1
                 continue
+
             for i in range(24 // num_of_hours):
-                # print(i)
                 x_week[i].append(x_day_array[k * i:k * (i + 1)])
                 y_week[i].append(matrix[tuple(y_day_array[k*i:k*(i+1)])])
 
         x.append(np.array([x_week[i] for i in range(24 // num_of_hours)]))
         y.append(np.array([y_week[i] for i in range(24 // num_of_hours)]))
+
+    print(counter)
     return x, y
 
 def get_x_any_y_advanced(df, weeks, y_column):

@@ -196,7 +196,8 @@ def prepare_grouped_data_advanced(scale=True, creative=False, num_of_hours=None)
     #     scaled_test_x = [scalar.transform(day) for day in test_x]
     #     return scaled_train_x, train_y, scaled_test_x, test_y
 
-    return train_x, train_y, test_x, test_y
+    # return train_x, train_y, test_x, test_y
+
 
 def divide_data_to_two_years(categorized=False, scale=True):
     df = prepare_categorized_dataset() if categorized else prepare_dataset()

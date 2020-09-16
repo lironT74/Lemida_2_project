@@ -236,7 +236,7 @@ def CM_LSTM_per_hour(model):
     for i in range(24):
         text = ax.text(i, i, s=str(confusion_matrix[i][i]),
                        ha="center", va="center", color='w', fontsize=fontsize - 9)
-    ax.set_title("LSTM predictions mistakes ratio counts on hours", fontsize=fontsize + 4)
+    ax.set_title("LSTM Error Distribution per Hour", fontsize=fontsize + 4)
 
     plt.savefig(f"./cms/LSTM predictions mistakes ratio counts on hours.png")
     # plt.show()
@@ -333,7 +333,7 @@ def LSTM_confusion_matrix_per_month(model):
                               title=f'LSTM confusion matrix for month {month + 1}')
 
 
-def LSTM_error_rate_per_hour(model):
+def LSTM_error_rate_per_hour(model, mode="percentage"):
     _, _, X_test, y_test = prepare_grouped_data(scale=True)
     n = len(X_test)
 
@@ -345,12 +345,21 @@ def LSTM_error_rate_per_hour(model):
             if predictions[i] != y[i]:
                 errors[i] += 1
             counts[i] += 1
-    error_rate = errors / np.sum(errors)
+
+
+    if mode == "percentage":
+        error_rate = errors / np.sum(errors)
+    else:
+        error_rate = errors / counts
 
     plt.bar(np.arange(1, 25), error_rate)
     plt.xticks(np.arange(1, 25))
     # plt.yticks(np.arange(0, 1.01, 0.05))
-    plt.title('Error Rate per Hour')
+    if mode == "percentage":
+        plt.title('LSTM Error Distribution among the hours')
+    else:
+        plt.title('LSTM Error Rate per Hour')
+
     plt.show()
 
 
@@ -358,4 +367,10 @@ if __name__ == '__main__':
     # model = train_model(verbose=True)
     # save_model(model, 'lstm_model')
     model = load_model('lstm_model')
-    LSTM_error_rate_per_hour(model)
+    # CM_LSTM_per_hour(model)
+
+    LSTM_error_rate_per_hour(model, mode="percentage")
+
+    # LSTM_error_rate_per_hour(model, mode="rate")
+
+

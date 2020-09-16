@@ -88,6 +88,7 @@ class BiLSTM_CRF(nn.Module):
                 best_label_id = argmax(next_label_var)
                 bptrs_t.append(best_label_id)
                 viterbivars_t.append(next_label_var[0][best_label_id].view(1))
+
             # Now add in the emission scores, and assign forward_var to the set
             # of viterbi variables we just computed
             forward_var = (torch.cat(viterbivars_t) + feat).view(1, -1)
