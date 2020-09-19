@@ -63,18 +63,23 @@ def prepare_train_test(categorized=False, scale=True, **kwargs):
     df = prepare_categorized_dataset() if categorized else prepare_dataset()
     dates_in_data = df['date'].unique()
     test_size = 0.25
-    train_days, test_days = train_test_split(dates_in_data,
-                                             test_size=test_size,
-                                             random_state=seed)
+    # train_days, test_days = train_test_split(dates_in_data,
+    #                                          test_size=test_size,
+    #                                          random_state=seed)
+    # test_set = df[df['date'].isin(test_days)]
+    # train_set = df[df['date'].isin(train_days)]
 
-    test_set = df[df['date'].isin(test_days)]
-    train_set = df[df['date'].isin(train_days)]
+    # test_x = test_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
+    # test_y = test_set[Y_COLUMN]
+    #
+    # train_x = train_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
+    # train_y = train_set[Y_COLUMN]
 
-    test_x = test_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
-    test_y = test_set[Y_COLUMN]
 
-    train_x = train_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
-    train_y = train_set[Y_COLUMN]
+    X = df.drop([Y_COLUMN, 'date', 'year'], axis=1)
+    Y = df[Y_COLUMN]
+
+    train_x, test_x, train_y, test_y = train_test_split(X,  Y, test_size = test_size, random_state = 57)
 
     if scale:
         scalar = StandardScaler()
