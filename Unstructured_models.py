@@ -76,22 +76,7 @@ def naive_bayes(data):
     print(f'{"Naive Bayes accuracy:":50} {round(acc, 3)}')
 
 
-if __name__ == '__main__':
-    # logistic_regression()
-    # naive_bayes()
-    # decision_tree(max_depth=5, scale=False, save_tree=False)
-    # decision_tree(scale=False, save_tree=False)
-    #
-    # one_vs_all(Perceptron(max_iter=500000), 'perceptron')
-    # one_vs_all(LogisticRegression(max_iter=500000, solver='lbfgs'), 'logistic regression')
-    #
-    # one_vs_all(DecisionTreeClassifier(), 'decision tree')
-    #
-    # one_vs_all(SVC(max_iter=500000, kernel="linear"), 'linear svm')
-    # one_vs_all(SVC(max_iter=500000, kernel="rbf"), 'rbf svm')
-    # one_vs_all(SVC(max_iter=500000, kernel="poly"), 'poly svm')
-    # one_vs_all(SVC(max_iter=500000, kernel="sigmoid"), 'sigmoid svm')
-
+def decision_tree_graph():
     data = dp.prepare_train_test(scale=False, categorized=False)
     acc = []
     for i in range(1, 25):
@@ -107,4 +92,23 @@ if __name__ == '__main__':
     plt.xticks(range(1, len(acc) + 1))
     plt.ylabel("test accuracy", rotation=90)
     plt.show()
+
+if __name__ == '__main__':
+    pass
+    # logistic_regression()
+    # naive_bayes()
+    # decision_tree(max_depth=5, scale=False, save_tree=False)
+    # decision_tree(scale=False, save_tree=False)
+    #
+    # one_vs_all(Perceptron(max_iter=500000), 'perceptron')
+    # one_vs_all(LogisticRegression(max_iter=500000, solver='lbfgs'), 'logistic regression')
+    #
+    # one_vs_all(DecisionTreeClassifier(), 'decision tree')
+    #
+    # one_vs_all(SVC(max_iter=500000, kernel="linear"), 'linear svm')
+    # one_vs_all(SVC(max_iter=500000, kernel="rbf"), 'rbf svm')
+    # one_vs_all(SVC(max_iter=500000, kernel="poly"), 'poly svm')
+    # one_vs_all(SVC(max_iter=500000, kernel="sigmoid"), 'sigmoid svm')
+
+
 
