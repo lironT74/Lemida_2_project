@@ -137,7 +137,7 @@ def evaluate(X_test, y_test, model):
 
 
 if __name__ == '__main__':
-    print('LSTM-CRF started 9')
+    print('LSTM-CRF started')
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
     START_LABEL = "<START>"
     STOP_LABEL = "<STOP>"
@@ -185,6 +185,7 @@ if __name__ == '__main__':
             if i % accumulate_grad_steps == 0:
                 optimizer.step()
                 model.zero_grad()
+            printable_loss += loss.item()
             acc += np.mean(counts_tensor.to("cpu").numpy() == np.array(best_path))
 
         printable_loss = accumulate_grad_steps * (printable_loss / len(X_train))

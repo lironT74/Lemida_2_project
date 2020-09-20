@@ -83,7 +83,7 @@ def decision_tree_graph(data):
 
     best_depth = np.argmax(acc)
     print(f'The tree that has the highest test accuracy has a depth of {best_depth + 1} '
-          f'and accuracy of {acc[best_depth]:.2f}')
+          f'and accuracy of {acc[best_depth]}')
 
     plt.title("DecisionTree_X test accuracy")
     plt.plot(range(1, len(acc) + 1), acc, color="fuchsia")

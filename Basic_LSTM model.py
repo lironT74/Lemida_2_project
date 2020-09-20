@@ -366,7 +366,7 @@ def LSTM_error_rate_per_hour(model, mode="percentage"):
 
 
 if __name__ == '__main__':
-    # model = train_model(verbose=True)
+    model = train_model(verbose=True)
     # save_model(model, 'lstm_model')
     # model = load_model('lstm_model')
     # CM_LSTM_per_hour(model)
@@ -375,6 +375,6 @@ if __name__ == '__main__':
 
     # LSTM_error_rate_per_hour(model, mode="rate")
 
-    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
-
-    print(len(X_train))
+    # X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+    #
+    # print(len(X_train))
