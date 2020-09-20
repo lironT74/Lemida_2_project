@@ -34,7 +34,7 @@ def train_and_save_model(X_train, y_train, model_path='crf_model.crfsuite'):
     trainer.set_params({
         'c1': 1.0,  # coefficient for L1 penalty
         'c2': 1e-3,  # coefficient for L2 penalty
-        'max_iterations': 50,  # stop earlier
+        'max_iterations': 150,  # stop earlier
         # include transitions that are possible, but not observed
         'feature.possible_transitions': True
     })
@@ -59,3 +59,4 @@ if __name__ == '__main__':
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=False)
     train_and_save_model(X_train, y_train, model_path=model_location)  # print(X_train[0][0])
     evaluate_model(X_test, y_test, model_path=model_location)
+
