@@ -8,6 +8,7 @@ import pickle
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from auxiliary_functions import create_month_dict
+from sklearn.model_selection import train_test_split
 
 
 class LSTM_Tagger(nn.Module):
@@ -123,14 +124,12 @@ def whole_year():
                   test_acc))
 
 
-def train_model(verbose=True):
-
-
-    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
-
+def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test=None, y_test=None):
+    if X_train is None:
+        X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
     epochs = 40
     vector_embedding_dim = X_train[0].shape[1]
-    hidden_dim = 100
+    hidden_dim = hidden_dim
     count_type_size = 3
     accumulate_grad_steps = 70  # This is the actual batch_size, while we officially use batch_size=1
 
@@ -150,7 +149,7 @@ def train_model(verbose=True):
     accuracy_list = []
     loss_list = []
     epochs = epochs
-
+    best_acc = 0
     for epoch in range(epochs):
         acc = 0  # to keep track of accuracy
         printable_loss = 0  # To keep track of the loss value
@@ -181,13 +180,14 @@ def train_model(verbose=True):
             loss_list.append(float(printable_loss))
             accuracy_list.append(float(acc))
             test_acc = evaluate(model, device, X_test, y_test)
+            best_acc = test_acc if test_acc > best_acc else best_acc
             e_interval = i
             print("Epoch {} Completed\t Loss {:.3f}\t Train Accuracy: {:.3f}\t Test Accuracy: {:.3f}"
                   .format(epoch + 1,
                           np.mean(loss_list[-e_interval:]),
                           np.mean(accuracy_list[-e_interval:]),
                           test_acc))
-    return model
+    return model, best_acc
 
 
 def save_model(model, model_fname):
@@ -199,49 +199,6 @@ def load_model(model_fname):
     with open(f'dumps/{model_fname}', 'rb') as f:
         model = pickle.load(f)
     return model
-
-
-def CM_LSTM_per_hour(model):
-
-    _, _, X_test, y_test = prepare_grouped_data(scale=True)
-
-    confusion_matrix = np.zeros((24, 24), int)
-
-    for x, y in zip(X_test, y_test):
-        _, predictions = torch.max(model(x), 1)
-
-        for day, (pred, label) in enumerate(zip(predictions, y)):
-            confusion_matrix[day][day] += int(pred != label)
-
-    confusion_matrix = np.round(confusion_matrix / np.sum(confusion_matrix), 2)
-
-    fontsize = 32
-    fig, ax = plt.subplots(figsize=(20, 20))
-
-    max = np.max(confusion_matrix)
-
-    sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
-    im = ax.imshow(confusion_matrix, cmap='jet', norm=plt.Normalize(vmin=0, vmax=max))
-
-    divider1 = make_axes_locatable(ax)
-    cax = divider1.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(sm, ax=ax, cax=cax).ax.tick_params(labelsize=fontsize)
-
-    ax.set_xticks(np.arange(24))
-    ax.set_yticks(np.arange(24))
-
-    ax.set_xticklabels(list(range(24)), fontsize=fontsize - 4)
-    ax.set_yticklabels(list(range(24)), fontsize=fontsize - 4)
-
-    # plt.setp(ax.get_xticklabels(), ha="right", rotation_mode="anchor")
-
-    for i in range(24):
-        text = ax.text(i, i, s=str(confusion_matrix[i][i]),
-                       ha="center", va="center", color='w', fontsize=fontsize - 9)
-    ax.set_title("LSTM Error Distribution per Hour", fontsize=fontsize + 4)
-
-    plt.savefig(f"./cms/LSTM predictions mistakes ratio counts on hours.png")
-    # plt.show()
 
 
 def LSTM_CM(model):
@@ -288,8 +245,8 @@ def draw_confusion_matrix(confusion_matrix, xtick_labels=None, ytick_labels=None
     if title:
         ax.set_title(title, fontsize=fontsize + 4)
 
-    plt.savefig(f"./cms/{title}.png")
-    # plt.show()
+    # plt.savefig(f"./cms/{title}.png")
+    plt.show()
 
 
 def LSTM_confusion_matrix_per_day(model):
@@ -348,7 +305,6 @@ def LSTM_error_rate_per_hour(model, mode="percentage"):
                 errors[i] += 1
             counts[i] += 1
 
-
     if mode == "percentage":
         error_rate = errors / np.sum(errors)
     else:
@@ -366,15 +322,20 @@ def LSTM_error_rate_per_hour(model, mode="percentage"):
 
 
 if __name__ == '__main__':
-    # model = train_model(verbose=True)
-    # save_model(model, 'lstm_model')
-    # model = load_model('lstm_model')
-    # CM_LSTM_per_hour(model)
-
-    # LSTM_error_rate_per_hour(model, mode="percentage")
-
-    # LSTM_error_rate_per_hour(model, mode="rate")
-
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
+    X_validation, X_test, y_validation, y_test = train_test_split(X_test, y_test, test_size=2 / 3,
+                                                                          random_state=57)
+    print('Validation started')
+    best_acc = 0
+    best_dim = 50
+    for hidden_dim in [50, 100, 200]:
+        print('---------------------------')
+        print(f'Hidden dim: {hidden_dim}')
+        _, acc = train_model(verbose=True, hidden_dim=hidden_dim,
+                    X_train=X_train, y_train=y_train, X_test=X_validation, y_test=y_validation)
+        best_acc, best_dim = (acc, hidden_dim) if acc > best_acc else (best_acc, best_dim)
+    print(f'Best accuracy: {best_acc}\tBest dim: {best_dim}')
+    _, acc = train_model(verbose=True, hidden_dim=hidden_dim,
+                    X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test)
+    print(f'Test accuracy of the model is {acc}')
 
-    print(len(X_train))

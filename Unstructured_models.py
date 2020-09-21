@@ -6,10 +6,12 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import LinearSVC, SVC
 from sklearn.linear_model import Perceptron
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+
 from sklearn.tree import export_graphviz
 # import graphviz
-from graphviz import Source
-import pydot
+# from graphviz import Source
+# import pydot
 import matplotlib.pyplot as plt
 
 
@@ -36,16 +38,16 @@ def decision_tree(data, max_depth=None, save_tree=False):
     dt = DecisionTreeClassifier(max_depth=max_depth)
     dt.fit(train_set_x, train_set_y)
 
-    if save_tree:
-        export_graphviz(dt, out_file=f"./tree_graphs/tree.dot",
-                        feature_names=data_columns,
-                        class_names=["low", "medium", "high"],
-                        rounded=True, proportion=False,
-                        precision=2, filled=True)
-
-        Source.from_file(f"./tree_graphs/tree.dot")
-        (graph,) = pydot.graph_from_dot_file(f"./tree_graphs/tree.dot")
-        graph.write_png(f'./tree_graphs/tree_{dt.tree_.max_depth}_.png')
+    # if save_tree:
+    #     export_graphviz(dt, out_file=f"./tree_graphs/tree.dot",
+    #                     feature_names=data_columns,
+    #                     class_names=["low", "medium", "high"],
+    #                     rounded=True, proportion=False,
+    #                     precision=2, filled=True)
+    #
+    #     Source.from_file(f"./tree_graphs/tree.dot")
+    #     (graph,) = pydot.graph_from_dot_file(f"./tree_graphs/tree.dot")
+    #     graph.write_png(f'./tree_graphs/tree_{dt.tree_.max_depth}_.png')
 
     predictions = dt.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
@@ -85,16 +87,21 @@ def decision_tree_graph(data):
     print(f'The tree that has the highest test accuracy has a depth of {best_depth + 1} '
           f'and accuracy of {acc[best_depth]:.2f}')
 
-    plt.title("DecisionTree_X test accuracy")
+    plt.title("DecisionTree_X validation accuracy")
     plt.plot(range(1, len(acc) + 1), acc, color="fuchsia")
     plt.xlabel("X")
     plt.xticks(range(1, len(acc) + 1))
-    plt.ylabel("test accuracy", rotation=90)
+    plt.ylabel("validation accuracy", rotation=90)
     plt.show()
 
 if __name__ == '__main__':
 
     data = prepare_train_test()
+    test_set_x, test_set_y, train_set_x, train_set_y = data  # for validation
+    validation_x, test_set_x, validation_y, test_set_y = train_test_split(test_set_x, test_set_y, test_size=2/3, random_state=57)
+
+    # data = validation_x, validation_y, train_set_x, train_set_y
+    data = test_set_x, test_set_y, train_set_x, train_set_y
 
     logistic_regression(data)
     naive_bayes(data)
