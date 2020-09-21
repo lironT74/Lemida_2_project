@@ -1,0 +1,54 @@
+
+
+
+
+Advanced Model: 
+ model 1 hours in block: 0.96562123039807
+ model 2 hours in block: 0.9709794437726723
+ model 3 hours in block: 0.9655172413793104
+ model 4 hours in block: 0.8789346246973365
+ model 6 hours in block: 0.8795620437956204
+ model 8 hours in block: 0.8786407766990292
+ model 12 hours in block: 0.8823529411764706
+
+
+Highest validation acc among epochs of Advanced models: 0.9709794437726723 	 best num of hours: 2
+
+
+
+
+Test acc of Advanced chosen model: 0.9621913580246914
+
+
+
+
+
+
+
+
+Creative Model: 
+
+
+
+
+
+
+
+
+
+Highest validation acc among epochs of Creative models: 0.9661480534242685 	 best num of hours: 12
+ model 1 hours in block: 0.9626202654975033
+ model 2 hours in block: 0.9661480534242685
+ model 3 hours in block: 0.9453857630008525
+ model 4 hours in block: 0.8812872975277067
+ model 6 hours in block: 0.8577365728900255
+ model 8 hours in block: 0.849531116794544
+ model 12 hours in block: 0.8529411764705882
+
+
+Average highest acc among epochs of creative models: 0.9661480534242685
+
+
+
+
+Average highest per hour test accuracy among the epochs: 0.950627124373686

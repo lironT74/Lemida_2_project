@@ -1,4 +1,4 @@
-import data_preprocessing as dp
+from data_preprocessing import *
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 from sklearn.multiclass import OneVsRestClassifier
@@ -6,8 +6,9 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import LinearSVC, SVC
 from sklearn.linear_model import Perceptron
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
 from sklearn.tree import export_graphviz
-# import graphviz
+import graphviz
 from graphviz import Source
 import pydot
 import matplotlib.pyplot as plt
@@ -31,7 +32,7 @@ def one_vs_all(model, data, name='model'):
 
 def decision_tree(data, max_depth=None, save_tree=False):
     test_set_x, test_set_y, train_set_x, train_set_y = data
-    data_columns = dp.X_COLUMNS
+    data_columns = X_COLUMNS
 
     dt = DecisionTreeClassifier(max_depth=max_depth)
     dt.fit(train_set_x, train_set_y)
@@ -76,35 +77,52 @@ def naive_bayes(data):
     print(f'{"Naive Bayes accuracy:":50} {round(acc, 3)}')
 
 
-if __name__ == '__main__':
-    # logistic_regression()
-    # naive_bayes()
-    # decision_tree(max_depth=5, scale=False, save_tree=False)
-    # decision_tree(scale=False, save_tree=False)
-    #
-    # one_vs_all(Perceptron(max_iter=500000), 'perceptron')
-    # one_vs_all(LogisticRegression(max_iter=500000, solver='lbfgs'), 'logistic regression')
-    #
-    # one_vs_all(DecisionTreeClassifier(), 'decision tree')
-    #
-    # one_vs_all(SVC(max_iter=500000, kernel="linear"), 'linear svm')
-    # one_vs_all(SVC(max_iter=500000, kernel="rbf"), 'rbf svm')
-    # one_vs_all(SVC(max_iter=500000, kernel="poly"), 'poly svm')
-    # one_vs_all(SVC(max_iter=500000, kernel="sigmoid"), 'sigmoid svm')
-
-    data = dp.prepare_train_test(scale=False, categorized=False)
+def decision_tree_graph(data):
     acc = []
     for i in range(1, 25):
         acc.append(decision_tree(data, max_depth=i))
 
     best_depth = np.argmax(acc)
     print(f'The tree that has the highest test accuracy has a depth of {best_depth + 1} '
-          f'and accuracy of {acc[best_depth]:.2f}')
+          f'and accuracy of {acc[best_depth]}')
 
-    plt.title("DecisionTree_X test accuracy")
+    plt.rcParams['font.size'] = 25
+    plt.rcParams["figure.figsize"] = (12, 8)
+
+    plt.title("DecisionTree_X validation accuracy")
     plt.plot(range(1, len(acc) + 1), acc, color="fuchsia")
     plt.xlabel("X")
-    plt.xticks(range(1, len(acc) + 1))
-    plt.ylabel("test accuracy", rotation=90)
-    plt.show()
+    plt.xticks(range(1, len(acc) + 1), fontsize=17)
+    plt.ylabel("validation accuracy", rotation=90)
+    plt.savefig("./desiciontreeacc.png", transparent=True)
+
+
+if __name__ == '__main__':
+
+    data = prepare_train_test()
+    test_validation_set_x, test_validation_set_y, train_set_x, train_set_y = data  # for validation
+    validation_x, test_set_x, validation_y, test_set_y = train_test_split(test_validation_set_x,
+                                                                          test_validation_set_y,
+                                                                          test_size=2/3, random_state=57)
+
+    # data = validation_x, validation_y, train_set_x, train_set_y
+    # decision_tree_graph(data)
+
+
+    data = test_set_x, test_set_y, train_set_x, train_set_y
+
+
+    logistic_regression(data)
+    naive_bayes(data)
+    decision_tree(data, max_depth=10, save_tree=False)
+    one_vs_all(Perceptron(max_iter=500000), data, 'perceptron')
+    one_vs_all(LogisticRegression(max_iter=500000, solver='lbfgs'),data,  'logistic regression')
+    one_vs_all(DecisionTreeClassifier(), data, 'decision tree')
+    one_vs_all(SVC(max_iter=500000, kernel="linear"),data, 'linear svm')
+    one_vs_all(SVC(max_iter=500000, kernel="rbf"),data,  'rbf svm')
+    one_vs_all(SVC(max_iter=500000, kernel="poly"), data, 'poly svm')
+    one_vs_all(SVC(max_iter=500000, kernel="sigmoid"),data,  'sigmoid svm')
+
+
+
 
