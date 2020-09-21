@@ -9,9 +9,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 
 from sklearn.tree import export_graphviz
-# import graphviz
-# from graphviz import Source
-# import pydot
+import graphviz
+from graphviz import Source
+import pydot
 import matplotlib.pyplot as plt
 
 
@@ -38,16 +38,16 @@ def decision_tree(data, max_depth=None, save_tree=False):
     dt = DecisionTreeClassifier(max_depth=max_depth)
     dt.fit(train_set_x, train_set_y)
 
-    # if save_tree:
-    #     export_graphviz(dt, out_file=f"./tree_graphs/tree.dot",
-    #                     feature_names=data_columns,
-    #                     class_names=["low", "medium", "high"],
-    #                     rounded=True, proportion=False,
-    #                     precision=2, filled=True)
-    #
-    #     Source.from_file(f"./tree_graphs/tree.dot")
-    #     (graph,) = pydot.graph_from_dot_file(f"./tree_graphs/tree.dot")
-    #     graph.write_png(f'./tree_graphs/tree_{dt.tree_.max_depth}_.png')
+    if save_tree:
+        export_graphviz(dt, out_file=f"./tree_graphs/tree.dot",
+                        feature_names=data_columns,
+                        class_names=["low", "medium", "high"],
+                        rounded=True, proportion=False,
+                        precision=2, filled=True)
+
+        Source.from_file(f"./tree_graphs/tree.dot")
+        (graph,) = pydot.graph_from_dot_file(f"./tree_graphs/tree.dot")
+        graph.write_png(f'./tree_graphs/tree_{dt.tree_.max_depth}_.png')
 
     predictions = dt.predict(test_set_x)
     acc = calc_acc(predictions, test_set_y)
