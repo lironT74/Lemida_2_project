@@ -265,15 +265,22 @@ def train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_h
 
 
 if __name__ == '__main__':
+
+    #VALIDATION AND MODEL CHOOSING OF ADVANCED AND CREATIVE LSTM MODELS
+
     data_set = {}
     validation_set = {}
+
     for num_of_hours in range(1, 13):
         if 24 % num_of_hours == 0:
-            X_train, y_train, X_test, y_test = prepare_grouped_data_advanced(num_of_hours)
-            data_set[num_of_hours] = prepare_grouped_data_advanced(num_of_hours)
-            X_validation, X_test, y_validation, y_test = train_test_split(X_test, y_test, test_size=2 / 3,
+            X_train, y_train, X_test_and_validation, y_test_and_validation = prepare_grouped_data_advanced(num_of_hours)
+
+            data_set[num_of_hours] =  X_train, y_train, X_test_and_validation, y_test_and_validation
+
+            X_validation, X_test, y_validation, y_test = train_test_split(X_test_and_validation, y_test_and_validation, test_size=2 / 3,
                                                                           random_state=57)
             validation_set[num_of_hours] = X_validation, y_validation
+
     EPOCHS = 40
 
     print(f"\n\n\n\nAdvanced Model: ")
@@ -296,18 +303,24 @@ if __name__ == '__main__':
     print(f"\n\nHighest validation acc among epochs of Advanced models: {best_acc} \t best num of hours: {best_model}")
     Advanced_acc = Advanced_acc.values()
 
-    plt.title("Advanced LSTM accuracy")
+    # Advanced_acc = [0.96562123039807, 0.9709794437726723, 0.9655172413793104, 0.9661016949152542, 0.8795620437956204, 0.8786407766990292, 0.8823529411764706]
+
+    plt.title("Advanced LSTM validation accuracy")
     plt.plot(range(1, len(Advanced_acc) + 1, 1), Advanced_acc, color="red")
     plt.xlabel("Number of hours in block")
     plt.xticks(range(1, len(Advanced_acc) + 1), [1, 2, 3, 4, 6, 8, 12])
-    plt.ylabel("Highest acc among epochs", rotation=90)
-    plt.savefig('advanced_lstm_accuracy.png', transparent=True)
+    plt.ylabel("Highest validation acc among epochs", rotation=90)
+    plt.savefig('./advanced_lstm_accuracy.png', transparent=True)
+    plt.close('all')
 
     X_train, y_train, X_test, y_test = data_set[best_model]
-    test_acc = train_model_advanced(num_of_hours=best_model, EPOCHS=EPOCHS, verbose=False,
+    test_acc_chosen = train_model_advanced(num_of_hours=best_model, EPOCHS=EPOCHS, verbose=False,
                          X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test)
 
-    print(f"\n\nTest acc among epochs of Advanced models: {test_acc}")
+
+    print(f"\n\n\n\nTest acc of Advanced chosen model: {test_acc_chosen}\n\n\n\n")
+
+
 
     print(f"\n\n\n\nCreative Model: ")
 
@@ -348,10 +361,20 @@ if __name__ == '__main__':
 
     Creative_acc = Creative_acc.values()
 
-    plt.title("Creative LSTM accuracy")
+    plt.title("Creative LSTM validation accuracy")
     plt.plot(range(1, len(Creative_acc) + 1, 1), Creative_acc, color="blue")
     plt.xlabel("Number of hours in block")
     plt.xticks(range(1, len(Creative_acc) + 1), [1, 2, 3, 4, 6, 8, 12])
-    plt.ylabel("Average highest acc among epochs", rotation=90)
-    plt.savefig('creative_lstm_accuracy.png', transparent=True)
+    plt.ylabel("Average highest validation acc among epochs", rotation=90)
+    plt.savefig('./creative_lstm_accuracy.png', transparent=True)
 
+
+    X_train, y_train, X_test, y_test = data_set[best_model]
+
+    chosen_acc_crative = []
+    for block_index in range(24 // best_model):
+        chosen_acc_crative.append(train_model_creative(block_index, X_train, y_train, X_test, y_test,
+                                                   num_of_hours=best_model, EPOCHS=EPOCHS))
+
+
+    print(f"\n\n\n\nAverage highest per hour test accuracy among the epochs: {np.average(chosen_acc_crative)}")

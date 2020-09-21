@@ -322,9 +322,11 @@ def LSTM_error_rate_per_hour(model, mode="percentage"):
 
 
 if __name__ == '__main__':
-    X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
-    X_validation, X_test, y_validation, y_test = train_test_split(X_test, y_test, test_size=2 / 3,
+    X_train, y_train, X_test_and_validation, y_test_and_validation = prepare_grouped_data(scale=True)
+    X_validation, X_test, y_validation, y_test = train_test_split(X_test_and_validation, y_test_and_validation, test_size=2 / 3,
                                                                           random_state=57)
+
+
     print('Validation started')
     best_acc = 0
     best_dim = 50
