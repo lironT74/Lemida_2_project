@@ -71,13 +71,9 @@ def get_x_any_y_advanced_creative(df, weeks, y_column, k):
 
             x_day_array = week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).to_numpy()
 
-            # print([week_df[week_df['week_day'] == week_day][y_column].iloc[0] for i in range(len(week_df[week_df['week_day'] == week_day].index))])
-
             y_hours_labels = {week_df[week_df['week_day'] == week_day]['hour'].iloc[i]: week_df[week_df['week_day'] == week_day][y_column].iloc[0] for i in range(len(week_df[week_df['week_day'] == week_day].index))}
             x_hours_vectors = {week_df[week_df['week_day'] == week_day]['hour'].iloc[i]: week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).iloc[0].to_numpy() for i in range(len(week_df[week_df['week_day'] == week_day].index))}
 
-            # for key, value in x_hours_vectors.items():
-            #     print(f"hour {key} : {value}")
 
             hour_index = list(week_df[week_df['week_day'] == week_day].drop([y_column, 'year_week'], axis=1).columns).index('hour')
 

@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -124,6 +123,7 @@ class BiLSTM_CRF(nn.Module):
         score, label_seq = self._viterbi_decode(lstm_feats)
         return score, label_seq
 
+
 def evaluate(X_test, y_test, model):
     acc = 0
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -137,14 +137,16 @@ def evaluate(X_test, y_test, model):
         # TODO change this if window size is not fixed
     return acc
 
-def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test=None, y_test=None):
+
+def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test=None, y_test=None, epochs=10):
     if X_train is None:
         X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
     START_LABEL = "<START>"
     STOP_LABEL = "<STOP>"
     VECTOR_EMBEDDING_DIM = X_train[0].shape[1]
-    HIDDEN_DIM = 100
+    HIDDEN_DIM = hidden_dim
     COUNT_TYPE_SIZE = 3
+    EPOCHS = epochs
 
     accumulate_grad_steps = 20
 
@@ -161,8 +163,9 @@ def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test
 
     accuracy_list = []
     loss_list = []
+    best_acc = 0
     # Make sure prepare_sequence from earlier in the LSTM section is loaded
-    for epoch in range(10):  # again, normally you would NOT do 300 epochs, it is toy data
+    for epoch in range(EPOCHS):  # again, normally you would NOT do 300 epochs, it is toy data
         i = 0
         acc = 0
         printable_loss = 0
@@ -202,21 +205,27 @@ def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test
                           test_acc))
     return model, best_acc
 
+
 if __name__ == '__main__':
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
 
     X_validation, X_test, y_validation, y_test = train_test_split(X_test, y_test, test_size=2 / 3,
                                                                   random_state=57)
     print('Validation started')
+
     best_acc = 0
     best_dim = 50
-    for hidden_dim in [50, 100, 200]:
-        print('---------------------------')
-        print(f'Hidden dim: {hidden_dim}')
-        _, acc = train_model(verbose=True, hidden_dim=hidden_dim,
-                             X_train=X_train, y_train=y_train, X_test=X_validation, y_test=y_validation)
-        best_acc, best_dim = (acc, hidden_dim) if acc > best_acc else (best_acc, best_dim)
+    epochs = 40
+
+    # for hidden_dim in [50, 100, 200]:
+    #     print('---------------------------')
+    #     print(f'Hidden dim: {hidden_dim}')
+    #     _, acc = train_model(verbose=True, hidden_dim=hidden_dim,
+    #                          X_train=X_train, y_train=y_train, X_test=X_validation, y_test=y_validation, epochs=epochs)
+    #     best_acc, best_dim = (acc, hidden_dim) if acc > best_acc else (best_acc, best_dim)
+
+
+    best_dim = 200
     print(f'Best accuracy: {best_acc}\tBest dim: {best_dim}')
-    _, acc = train_model(verbose=True, hidden_dim=hidden_dim,
-                         X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test)
+    _, acc = train_model(verbose=True, hidden_dim=best_dim, X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, epochs=epochs)
     print(f'Test accuracy of the model is {acc}')

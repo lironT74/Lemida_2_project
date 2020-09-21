@@ -7,24 +7,6 @@ X_COLUMNS = ['t1', 't2', 'hum', 'wind_speed', 'weather_code', 'is_holiday', 'is_
 Y_COLUMN = 'cnt_categories'
 
 
-def hour2features(hours, i):
-    curr_hour = hours[i]
-    features = [column + '=' + str(value) for column, value in zip(X_COLUMNS, curr_hour)]
-    features.append('bias')
-    if i > 0:
-        prev_hour = hours[i-1]
-        prev_features = ['prev_'+column + '=' + str(value) for column, value in zip(X_COLUMNS, prev_hour)]
-        features.extend(prev_features)
-    else:
-        features.append('BOS')
-
-    return features
-
-
-def date2features(day):
-    return [hour2features(day, i) for i in range(len(day))]
-
-
 def train_and_save_model(X_train, y_train, model_path='crf_model.crfsuite'):
     X_train = [date2features(x) for x in X_train]
     y_train = [[str(label) for label in y] for y in y_train]
@@ -54,9 +36,26 @@ def evaluate_model(X_test, y_test, model_path='crf_model.crfsuite'):
     print(f'Accuracy: {acc}')
 
 
+def hour2features(hours, i):
+    curr_hour = hours[i]
+    features = [column + '=' + str(value) for column, value in zip(X_COLUMNS, curr_hour)]
+    features.append('bias')
+    if i > 0:
+        prev_hour = hours[i-1]
+        prev_features = ['prev_'+column + '=' + str(value) for column, value in zip(X_COLUMNS, prev_hour)]
+        features.extend(prev_features)
+    else:
+        features.append('BOS')
+
+    return features
+
+
+def date2features(day):
+    return [hour2features(day, i) for i in range(len(day))]
+
 if __name__ == '__main__':
     model_location = 'dumps/crf_model.crfsuite'
     X_train, y_train, X_test, y_test = prepare_grouped_data(scale=False)
-    train_and_save_model(X_train, y_train, model_path=model_location)  # print(X_train[0][0])
+    train_and_save_model(X_train, y_train, model_path=model_location)
     evaluate_model(X_test, y_test, model_path=model_location)
 
