@@ -131,7 +131,7 @@ def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test
     vector_embedding_dim = X_train[0].shape[1]
     hidden_dim = hidden_dim
     count_type_size = 3
-    accumulate_grad_steps = 70  # This is the actual batch_size, while we officially use batch_size=1
+    accumulate_grad_steps = 70
 
     model = LSTM_Tagger(vector_embedding_dim, hidden_dim, count_type_size)
 
@@ -151,13 +151,12 @@ def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test
     epochs = epochs
     best_acc = 0
     for epoch in range(epochs):
-        acc = 0  # to keep track of accuracy
-        printable_loss = 0  # To keep track of the loss value
+        acc = 0
+        printable_loss = 0
         i = 0
         for day_index in np.random.permutation(len(X_train)):
             i += 1
 
-            # hours_array = scalar.transform(X_train[day_index])
             hours_array = X_train[day_index]
             counts_tensor = torch.from_numpy(y_train[day_index]).to(device)
 
@@ -304,6 +303,7 @@ def LSTM_error_rate_per_hour(model, mode="percentage"):
             if predictions[i] != y[i]:
                 errors[i] += 1
             counts[i] += 1
+
 
     if mode == "percentage":
         error_rate = errors / np.sum(errors)

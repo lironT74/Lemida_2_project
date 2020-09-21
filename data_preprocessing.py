@@ -70,7 +70,7 @@ def prepare_train_test(categorized=False, scale=True, **kwargs):
     X = df.drop([Y_COLUMN, 'date', 'year'], axis=1)
     Y = df[Y_COLUMN]
 
-    train_x, test_x, train_y, test_y = train_test_split(X,  Y, test_size = test_size, random_state = 57)
+    train_x, test_x, train_y, test_y = train_test_split(X,  Y, test_size = test_size, random_state = seed)
 
     if scale:
         scalar = StandardScaler()

@@ -5,7 +5,7 @@ import torch.optim as optim
 import numpy as np
 from data_preprocessing import prepare_grouped_data_advanced
 from auxiliary_functions import *
-
+import matplotlib.pyplot as plt
 
 class LSTM_Advanced_Creative(nn.Module):
     def __init__(self, vector_emb_dim, hidden_dim, num_classes):
@@ -262,47 +262,68 @@ def train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_h
 
 if __name__ == '__main__':
 
-    EPOCHS = 50
+    # EPOCHS = 50
+    #
+    # print(f"\n\n\n\nAdvanced Model: ")
+    #
+    # Advanced_acc = {}
+    #
+    # for num_of_hours in range(1, 13):
+    #     if 24 % num_of_hours == 0:
+    #         print(f"\nAdvanced Model with {num_of_hours} hours in block: \n")
+    #         Advanced_acc[num_of_hours] = train_model_advanced(num_of_hours=num_of_hours, EPOCHS=EPOCHS)
+    #
+    # print(f"\n\nHighest acc among epochs of Advanced models: ")
+    # for num_of_hourss, acc in Advanced_acc.items():
+    #     print(f' model {num_of_hourss} hours in block: {acc}')
+    #
+    #
+    # print(f"\n\n\n\nCreative Model: ")
+    #
+    # Creative_acc = {}
+    # for num_of_hours in range(1, 13):
+    #
+    #     if 24 % num_of_hours == 0:
+    #         print(f'\nTraining of model {num_of_hours} hours in block started')
+    #
+    #         X_train, y_train, X_test, y_test = prepare_grouped_data_advanced(num_of_hours)
+    #
+    #         best_test_accs = []
+    #
+    #         for block_index in range(24 // num_of_hours):
+    #             print(f"\nModel of hours: {block_index * num_of_hours}:{(block_index + 1) * num_of_hours}")
+    #             best_test_accs.append(train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_hours=num_of_hours, EPOCHS=EPOCHS))
+    #
+    #         print()
+    #         for i, acc in enumerate(best_test_accs):
+    #             print(f'Hours: {i * num_of_hours}:{(i + 1) * num_of_hours} max test acc among epochs: {acc}')
+    #
+    #         print(f'\nAverage acc of max acc among epochs: {np.average(best_test_accs)}')
+    #         Creative_acc[num_of_hours] = np.average(best_test_accs)
+    #
+    #
+    # print(f"\n\nAverage highest acc among epochs of creative models: ")
+    # for num_of_hourss, acc in Creative_acc.items():
+    #     print(f' model {num_of_hourss} hours in block: {acc}')
 
-    print(f"\n\n\n\nAdvanced Model: ")
+    # Advanced_acc = [0.9626916914625773, 0.9619440623567171, 0.9620951068228808,
+    #                 0.9641214351425943, 0.8476454293628809, 0.8484288354898336,
+    #                 0.8491620111731844]
+    #
+    # plt.title("Advanced LSTM accuracy")
+    # plt.plot(range(1, len(Advanced_acc) + 1, 1), Advanced_acc, color="red")
+    # plt.xlabel("Number of hours in block")
+    # plt.xticks(range(1, len(Advanced_acc) + 1), [1,2,3,4,6,8,12])
+    # plt.ylabel("Highest acc among epochs", rotation=90)
+    # plt.show()
 
-    Advanced_acc = {}
+    Creative_acc = [0.9574304175280083, 0.9546112066037796, 0.9510909463716049,
+                    0.905185386455199, 0.8476519337016575,  0.8484346224677717,  0.8491885143570537]
 
-    for num_of_hours in range(1, 13):
-        if 24 % num_of_hours == 0:
-            print(f"\nAdvanced Model with {num_of_hours} hours in block: \n")
-            Advanced_acc[num_of_hours] = train_model_advanced(num_of_hours=num_of_hours, EPOCHS=EPOCHS)
-
-    print(f"\n\nHighest acc among epochs of Advanced models: ")
-    for num_of_hourss, acc in Advanced_acc.items():
-        print(f' model {num_of_hourss} hours in block: {acc}')
-
-
-    print(f"\n\n\n\nCreative Model: ")
-
-    Creative_acc = {}
-    for num_of_hours in range(1, 13):
-
-        if 24 % num_of_hours == 0:
-            print(f'\nTraining of model {num_of_hours} hours in block started')
-
-            X_train, y_train, X_test, y_test = prepare_grouped_data_advanced(num_of_hours)
-
-            best_test_accs = []
-
-            for block_index in range(24 // num_of_hours):
-                print(f"\nModel of hours: {block_index * num_of_hours}:{(block_index + 1) * num_of_hours}")
-                best_test_accs.append(train_model_creative(block_index, X_train, y_train, X_test, y_test, num_of_hours=num_of_hours, EPOCHS=EPOCHS))
-
-            print()
-            for i, acc in enumerate(best_test_accs):
-                print(f'Hours: {i * num_of_hours}:{(i + 1) * num_of_hours} max test acc among epochs: {acc}')
-
-            print(f'\nAverage acc of max acc among epochs: {np.average(best_test_accs)}')
-            Creative_acc[num_of_hours] = np.average(best_test_accs)
-
-
-    print(f"\n\nAverage highest acc among epochs of creative models: ")
-    for num_of_hourss, acc in Creative_acc.items():
-        print(f' model {num_of_hourss} hours in block: {acc}')
+    plt.title("Creative LSTM accuracy")
+    plt.plot(range(1, len(Creative_acc) + 1, 1), Creative_acc, color="blue")
+    plt.xlabel("Number of hours in block")
+    plt.xticks(range(1, len(Creative_acc) + 1), [1, 2, 3, 4, 6, 8, 12])
+    plt.ylabel("Average highest acc among epochs", rotation=90)
+    plt.show()
 

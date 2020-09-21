@@ -161,16 +161,24 @@ def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test
 
     accuracy_list = []
     loss_list = []
-    best_acc = 0
-    for epoch in range(10):
+    # Make sure prepare_sequence from earlier in the LSTM section is loaded
+    for epoch in range(10):  # again, normally you would NOT do 300 epochs, it is toy data
         i = 0
         acc = 0
         printable_loss = 0
         for day_index in np.random.permutation(len(X_train)):
             i += 1
+
+            # hours_array = scalar.transform(X_train[day_index])
             hours_array = X_train[day_index]
             counts_tensor = torch.from_numpy(y_train[day_index]).to(device)
+            # Step 1. Remember that Pytorch accumulates gradients.
+            # We need to clear them out before each instance
 
+            # Step 2. Get our inputs ready for the network, that is,
+            # turn them into Tensors of word indices.
+
+            # Step 3. Run our forward pass.
             loss, best_path = model.neg_log_likelihood(hours_array, counts_tensor)
             loss.backward()
             if i % accumulate_grad_steps == 0:
