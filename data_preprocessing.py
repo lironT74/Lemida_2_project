@@ -61,25 +61,13 @@ def prepare_train_test(categorized=False, scale=True, **kwargs):
     seed = kwargs.get("seed", 57)
 
     df = prepare_categorized_dataset() if categorized else prepare_dataset()
-    dates_in_data = df['date'].unique()
     test_size = 0.25
-    # train_days, test_days = train_test_split(dates_in_data,
-    #                                          test_size=test_size,
-    #                                          random_state=seed)
-    # test_set = df[df['date'].isin(test_days)]
-    # train_set = df[df['date'].isin(train_days)]
-
-    # test_x = test_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
-    # test_y = test_set[Y_COLUMN]
-    #
-    # train_x = train_set.drop([Y_COLUMN, 'date', 'year'], axis=1)
-    # train_y = train_set[Y_COLUMN]
 
 
     X = df.drop([Y_COLUMN, 'date', 'year'], axis=1)
     Y = df[Y_COLUMN]
 
-    train_x, test_x, train_y, test_y = train_test_split(X,  Y, test_size = test_size, random_state = 57)
+    train_x, test_x, train_y, test_y = train_test_split(X,  Y, test_size = test_size, random_state = seed)
 
     if scale:
         scalar = StandardScaler()
@@ -176,17 +164,3 @@ def divide_data_to_two_years(categorized=False, scale=True):
 
 if __name__ == '__main__':
     pass
-    train_x, train_y, test_x, test_y = prepare_grouped_data_advanced(creative=True, num_of_hours=6) # (seq_len, week, 4_hours, vector_dim) , (seq_len, dim)
-    # # train_x = np.array(train_x)
-    # # train_y = np.array(train_y)
-    # print(train_y)
-    print(train_x[0].shape)
-    #
-    # counter = 0
-    # max = 0
-    # for x in train_x:
-    #     for day in x:
-    #         counter += 1 if len(day) < 4 else 0
-    #         max = max if max > len(day) else len(day)
-    # print(counter)
-    # print(max)

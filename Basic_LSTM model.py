@@ -132,7 +132,7 @@ def train_model(verbose=True):
     vector_embedding_dim = X_train[0].shape[1]
     hidden_dim = 100
     count_type_size = 3
-    accumulate_grad_steps = 70  # This is the actual batch_size, while we officially use batch_size=1
+    accumulate_grad_steps = 70
 
     model = LSTM_Tagger(vector_embedding_dim, hidden_dim, count_type_size)
 
@@ -152,13 +152,12 @@ def train_model(verbose=True):
     epochs = epochs
 
     for epoch in range(epochs):
-        acc = 0  # to keep track of accuracy
-        printable_loss = 0  # To keep track of the loss value
+        acc = 0
+        printable_loss = 0
         i = 0
         for day_index in np.random.permutation(len(X_train)):
             i += 1
 
-            # hours_array = scalar.transform(X_train[day_index])
             hours_array = X_train[day_index]
             counts_tensor = torch.from_numpy(y_train[day_index]).to(device)
 
@@ -241,7 +240,6 @@ def CM_LSTM_per_hour(model):
     ax.set_title("LSTM Error Distribution per Hour", fontsize=fontsize + 4)
 
     plt.savefig(f"./cms/LSTM predictions mistakes ratio counts on hours.png")
-    # plt.show()
 
 
 def LSTM_CM(model):
@@ -289,7 +287,6 @@ def draw_confusion_matrix(confusion_matrix, xtick_labels=None, ytick_labels=None
         ax.set_title(title, fontsize=fontsize + 4)
 
     plt.savefig(f"./cms/{title}.png")
-    # plt.show()
 
 
 def LSTM_confusion_matrix_per_day(model):
@@ -366,7 +363,8 @@ def LSTM_error_rate_per_hour(model, mode="percentage"):
 
 
 if __name__ == '__main__':
-    model = train_model(verbose=True)
+    pass
+    # model = train_model(verbose=True)
     # save_model(model, 'lstm_model')
     # model = load_model('lstm_model')
     # CM_LSTM_per_hour(model)
@@ -374,7 +372,3 @@ if __name__ == '__main__':
     # LSTM_error_rate_per_hour(model, mode="percentage")
 
     # LSTM_error_rate_per_hour(model, mode="rate")
-
-    # X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
-    #
-    # print(len(X_train))
