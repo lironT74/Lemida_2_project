@@ -1,5 +1,12 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
 
-from LSTM_visualizations import *
+from data_preprocessing import prepare_grouped_data, train_test_split
+import pickle
+import numpy as np
+
 
 class LSTM_Tagger(nn.Module):
     def __init__(self, vector_emb_dim, hidden_dim, num_classes):
@@ -9,17 +16,13 @@ class LSTM_Tagger(nn.Module):
                             num_layers=2, bidirectional=True, batch_first=False)
         self.hidden_to_count = nn.Linear(hidden_dim * 2, num_classes)
 
-    def forward(self, hours_array, get_hidden_layer=False):
+    def forward(self, hours_array):
         hours_tensor = torch.from_numpy(hours_array).float().to(self.device)
 
         lstm_out, _ = self.lstm(
             hours_tensor.view(hours_tensor.shape[0], 1, -1))  # [seq_length, batch_size, 2*hidden_dim]
 
-        if get_hidden_layer:
-            return lstm_out
-
         class_weights = self.hidden_to_count(lstm_out.view(hours_tensor.shape[0], -1))  # [seq_length, tag_dim]
-        # return class_weights
 
         count_type_scores = F.log_softmax(class_weights, dim=1)  # [seq_length, tag_dim]
         return count_type_scores
@@ -38,14 +41,10 @@ def evaluate(model, device, X_test, y_test):
     return acc
 
 
-
 def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test=None, y_test=None, epochs=40):
-
     if X_train is None:
         X_train, y_train, X_test, y_test = prepare_grouped_data(scale=True)
-    epochs = epochs
     vector_embedding_dim = X_train[0].shape[1]
-    hidden_dim = hidden_dim
     count_type_size = 3
     accumulate_grad_steps = 70
 
@@ -66,6 +65,7 @@ def train_model(verbose=True, hidden_dim=100, X_train=None, y_train=None, X_test
     loss_list = []
     epochs = epochs
     best_acc = 0
+
     for epoch in range(epochs):
         acc = 0
         printable_loss = 0
@@ -118,9 +118,9 @@ def load_model(model_fname):
 
 if __name__ == '__main__':
     X_train, y_train, X_test_and_validation, y_test_and_validation = prepare_grouped_data(scale=True)
-    X_validation, X_test, y_validation, y_test = train_test_split(X_test_and_validation, y_test_and_validation, test_size=2 / 3,
-                                                                          random_state=57)
-
+    X_validation, X_test, y_validation, y_test = train_test_split(X_test_and_validation, y_test_and_validation,
+                                                                  test_size=2 / 3,
+                                                                  random_state=57)
 
     print('Validation started')
     best_acc = 0
@@ -131,11 +131,10 @@ if __name__ == '__main__':
         print('---------------------------')
         print(f'Hidden dim: {hidden_dim}')
         _, acc = train_model(verbose=True, hidden_dim=hidden_dim,
-                    X_train=X_train, y_train=y_train, X_test=X_validation, y_test=y_validation, epochs=epochs)
+                             X_train=X_train, y_train=y_train, X_test=X_validation, y_test=y_validation, epochs=epochs)
         best_acc, best_dim = (acc, hidden_dim) if acc > best_acc else (best_acc, best_dim)
 
     print(f'Best accuracy: {best_acc}\tBest dim: {best_dim}')
     _, acc = train_model(verbose=True, hidden_dim=best_dim,
-                    X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, epochs=epochs)
+                         X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, epochs=epochs)
     print(f'Test accuracy of the model is {acc}')
-

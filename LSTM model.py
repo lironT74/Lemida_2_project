@@ -18,17 +18,13 @@ class LSTM_Tagger(nn.Module):
                             num_layers=2, bidirectional=True, batch_first=False)
         self.hidden_to_count = nn.Linear(hidden_dim * 2, num_classes)
 
-    def forward(self, hours_array, get_hidden_layer=False):
+    def forward(self, hours_array):
         hours_tensor = torch.from_numpy(hours_array).float().to(self.device)
 
         lstm_out, _ = self.lstm(
             hours_tensor.view(hours_tensor.shape[0], 1, -1))  # [seq_length, batch_size, 2*hidden_dim]
 
-        if get_hidden_layer:
-            return lstm_out
-
         class_weights = self.hidden_to_count(lstm_out.view(hours_tensor.shape[0], -1))  # [seq_length, tag_dim]
-        # return class_weights
 
         count_type_scores = F.log_softmax(class_weights, dim=1)  # [seq_length, tag_dim]
         return count_type_scores
@@ -44,7 +40,6 @@ def evaluate(model, device, X_test, y_test):
             _, indices = torch.max(counts_scores, 1)
             acc += np.sum(counts_tensor.to("cpu").numpy() == indices.to("cpu").numpy())
         acc = acc / (len(X_test) * len(X_test[0]))
-        # TODO change this if window size is not fixed
     return acc
 
 
@@ -130,7 +125,7 @@ def train_model(verbose=True):
     vector_embedding_dim = X_train[0].shape[1]
     hidden_dim = 100
     count_type_size = 3
-    accumulate_grad_steps = 70  # This is the actual batch_size, while we officially use batch_size=1
+    accumulate_grad_steps = 70
 
     model = LSTM_Tagger(vector_embedding_dim, hidden_dim, count_type_size)
 
